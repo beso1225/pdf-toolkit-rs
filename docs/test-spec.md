@@ -36,14 +36,14 @@ This document defines the testing contract for `pdf-toolkit-rs`.
 ## Command-specific minimum assertions
 
 - `info`: version/pages/encrypted fields are present and correct in text mode, and JSON payload shape is stable in `--format json`
-- `merge`: expected output page count; missing input fails
-- `extract-pages`: selected page count correctness; out-of-range fails
+- `merge`: expected output page count; missing input fails; JSON payload shape stable in `--format json`
+- `extract-pages`: selected page count correctness; out-of-range fails; JSON payload shape stable in `--format json`
 - `remove-pages`: remaining page count correctness; remove-all forbidden
 - `rotate-pages`: valid degrees succeed; invalid degrees fail
 - `create blank`: supported sizes succeed; invalid size fails
 - `set-meta`: title/author write behavior; at least one field required
 - `reorder-pages`: output count/order contract; out-of-range fails
-- `split`: single/range/chunk modes; invalid mode fails
+- `split`: single/range/chunk modes; invalid mode fails; JSON payload shape stable in `--format json`
 - merge navigation markers: index/destination/link/outline labels are deterministic and safely encoded
 
 ## Skill workflow requirement (mandatory)

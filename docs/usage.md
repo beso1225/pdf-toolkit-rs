@@ -12,15 +12,18 @@ cargo build
 cargo run -- info input.pdf
 cargo run -- info input.pdf --format json
 cargo run -- merge a.pdf b.pdf -o merged.pdf
+cargo run -- merge a.pdf b.pdf -o merged.pdf --format json
 cargo run -- merge a.pdf b.pdf --index -o merged-index.pdf
 cargo run -- merge a.pdf b.pdf --index --links=false --outlines=false -o merged-index-basic.pdf
 cargo run -- extract-pages input.pdf --pages 2,4-5 -o out.pdf
+cargo run -- extract-pages input.pdf --pages 2,4-5 -o out.pdf --format json
 cargo run -- remove-pages input.pdf --pages 1,3 -o out.pdf
 cargo run -- rotate-pages input.pdf --pages 2,4 --deg 90 -o out.pdf
-cargo run -- create blank --size A4 -o blank.pdf
+cargo run -- create blank --size A4 -o blank.pdf --format json
 cargo run -- set-meta input.pdf --title "Spec Driven" --author "Yutaro" -o out.pdf
 cargo run -- reorder-pages input.pdf --order 4,2,1,3 -o out.pdf
 cargo run -- split input.pdf --by chunk:2 --output-dir parts
+cargo run -- split input.pdf --by chunk:2 --output-dir parts --format json
 ```
 
 ## Notes
@@ -30,7 +33,7 @@ cargo run -- split input.pdf --by chunk:2 --output-dir parts
 - Successful command output begins with:
   - `status=ok`
   - `command=<command-name>`
-- `info` supports `--format text|json` (default: `text`).
+- `--format text|json` (default: `text`) is supported by `info`, `merge`, `extract-pages`, `remove-pages`, `rotate-pages`, `create blank`, `set-meta`, `reorder-pages`, and `split`.
 - `split` supports:
   - `single`
   - `range:<ranges>` (example: `range:1-2,4-5`)
