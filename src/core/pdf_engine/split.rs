@@ -25,11 +25,12 @@ pub fn split_pdf(input: &Path, by: &str, output_dir: &Path) -> Result<usize, Pdf
 
 fn parse_split_groups(by: &str, max_page: usize) -> Result<Vec<Vec<usize>>, PdfError> {
     let trimmed = by.trim();
-    if trimmed.eq_ignore_ascii_case("single") {
+    let lower = trimmed.to_ascii_lowercase();
+    if lower == "single" {
         return Ok((1..=max_page).map(|p| vec![p]).collect());
     }
 
-    if let Some(rest) = trimmed.strip_prefix("range:") {
+    if let Some(rest) = lower.strip_prefix("range:") {
         let mut groups = Vec::new();
         for part in rest.split(',') {
             let token = part.trim();
@@ -43,7 +44,7 @@ fn parse_split_groups(by: &str, max_page: usize) -> Result<Vec<Vec<usize>>, PdfE
         return Ok(groups);
     }
 
-    if let Some(rest) = trimmed.strip_prefix("chunk:") {
+    if let Some(rest) = lower.strip_prefix("chunk:") {
         let chunk_size = rest.parse::<usize>().ok();
         let Some(chunk_size) = chunk_size else {
             return Err(PdfError::InvalidSplitMode {
