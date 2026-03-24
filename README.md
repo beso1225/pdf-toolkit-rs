@@ -22,6 +22,37 @@ Near-term focus:
 
 - strengthen split behavior with additional compatibility-style cases
 - tighten error UX consistency across all commands
+- add explicit stdout/stderr contract tests for every command
+
+## Farther implementation roadmap
+
+### Phase 1: Real PDF operation fidelity
+
+- preserve existing page objects when possible (not only synthetic rewrite)
+- improve merge fidelity for metadata/catalog structure
+- improve rotate/reorder/extract to keep per-page attributes
+- add encrypted-PDF behavior policy (`inspect` support + edit restrictions)
+
+### Phase 2: CLI UX and safety
+
+- add overwrite policy flags (`--force`, `--no-clobber`)
+- add deterministic output naming templates for split
+- unify error messages and exit-code policy across all commands
+- add `--json` output mode for machine-friendly integration
+
+### Phase 3: Quality and compatibility hardening
+
+- expand public-inspired compatibility corpus with edge-case manifests
+- add differential checks against well-known tools on selected fixtures
+- add larger performance regression suite and budget thresholds
+- add fuzz-style parser robustness tests for malformed inputs
+
+### Phase 4: Distribution and release
+
+- publish crate API docs and examples per command
+- add release automation for tags/changelog/binaries
+- support install paths (`cargo install`, prebuilt binaries)
+- define semver and backward-compatibility policy
 
 For every upcoming skill we enforce:
 
