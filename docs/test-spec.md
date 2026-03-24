@@ -15,6 +15,7 @@ This document defines the testing contract for `pdf-toolkit-rs`.
    - binary launches
    - help output shape
    - basic command invocation success/failure
+   - interactive shell entry/exit/help and representative command dispatch
 
 2. Skill-focused integration tests
    - one test file per skill area (merge/extract/remove/rotate/create/set-meta/reorder/split)

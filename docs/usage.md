@@ -6,6 +6,23 @@
 cargo build
 ```
 
+## Interactive shell mode
+
+Run without subcommands:
+
+```bash
+cargo run --
+```
+
+Inside the shell:
+
+```text
+pdf> help
+pdf> info input.pdf
+pdf> merge a.pdf b.pdf -o merged.pdf
+pdf> quit
+```
+
 ## Common commands
 
 ```bash
@@ -34,6 +51,8 @@ cargo run -- split input.pdf --by chunk:2 --output-dir parts --format json
   - `status=ok`
   - `command=<command-name>`
 - `--format text|json` (default: `text`) is supported by `info`, `merge`, `extract-pages`, `remove-pages`, `rotate-pages`, `create blank`, `set-meta`, `reorder-pages`, and `split`.
+- Running `pdf` without a subcommand opens the interactive shell.
+- In shell mode, you can type normal commands directly (for example `info input.pdf`) and use `help`/`quit`.
 - `split` supports:
   - `single`
   - `range:<ranges>` (example: `range:1-2,4-5`)
