@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use super::{error::PdfError, types::PdfInfo};
+use super::{error::PdfError, parse_page_ranges, types::PdfInfo};
 
 pub fn inspect_pdf(path: &Path) -> Result<PdfInfo, PdfError> {
     let bytes = fs::read(path).map_err(|source| PdfError::OpenPdf {
@@ -22,6 +22,17 @@ pub fn merge_pdfs(inputs: &[&Path], output: &Path) -> Result<(), PdfError> {
     }
 
     let out = write_simple_pdf(page_total, "1.5");
+    fs::write(output, out).map_err(|source| PdfError::SavePdf {
+        path: output.display().to_string(),
+        source,
+    })?;
+    Ok(())
+}
+
+pub fn extract_pages(input: &Path, pages: &str, output: &Path) -> Result<(), PdfError> {
+    let info = inspect_pdf(input)?;
+    let selected = parse_page_ranges(pages, info.page_count)?;
+    let out = write_simple_pdf(selected.len(), &info.version);
     fs::write(output, out).map_err(|source| PdfError::SavePdf {
         path: output.display().to_string(),
         source,
