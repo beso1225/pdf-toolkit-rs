@@ -14,4 +14,6 @@ pub enum PdfError {
     SavePdf { path: String, source: io::Error },
     #[error("invalid page range `{input}`: {reason}")]
     InvalidPageRange { input: String, reason: String },
+    #[error("remove-pages would remove all pages from the document")]
+    RemoveAllPagesForbidden,
 }
