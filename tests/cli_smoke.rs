@@ -30,6 +30,22 @@ fn interactive_shell_help_command_works() {
 }
 
 #[test]
+fn interactive_shell_dispatches_info_command() {
+    let dir = tempdir().expect("temp dir should be created");
+    let file_path = dir.path().join("minimal.pdf");
+    write_minimal_pdf(&file_path);
+
+    Command::cargo_bin("pdf")
+        .expect("binary should build")
+        .write_stdin(format!("info {}\nquit\n", file_path.to_string_lossy()))
+        .assert()
+        .success()
+        .stdout(contains("status=ok"))
+        .stdout(contains("command=info"))
+        .stdout(contains("version=1.5"));
+}
+
+#[test]
 fn accepts_info_subcommand_shape() {
     let dir = tempdir().expect("temp dir should be created");
     let file_path = dir.path().join("minimal.pdf");

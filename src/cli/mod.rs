@@ -446,12 +446,29 @@ fn run_interactive_shell() -> anyhow::Result<()> {
                 println!("Bye!");
                 break;
             }
-            _ => {
-                println!("Interactive dispatch is coming next. Type `help` or `quit`.");
+            input => {
+                if let Err(err) = dispatch_shell_command(input) {
+                    println!("error[shell_dispatch]: {err}");
+                    println!("Tip: type `help` for shell commands.");
+                }
             }
         }
     }
     Ok(())
+}
+
+fn dispatch_shell_command(input: &str) -> anyhow::Result<()> {
+    let Some(parts) = shlex::split(input) else {
+        anyhow::bail!("failed to parse command line");
+    };
+    if parts.is_empty() {
+        return Ok(());
+    }
+
+    let mut argv = vec!["pdf".to_string()];
+    argv.extend(parts);
+    let cli = Cli::try_parse_from(argv)?;
+    execute_command(cli)
 }
 
 fn print_shell_banner() {
