@@ -10,8 +10,23 @@ fn write_minimal_pdf(path: &std::path::Path) {
 fn runs_without_args() {
     Command::cargo_bin("pdf")
         .expect("binary should build")
+        .write_stdin("quit\n")
         .assert()
-        .success();
+        .success()
+        .stdout(contains("PDF Toolkit Shell"))
+        .stdout(contains("Type `help` for shell commands"))
+        .stdout(contains("Bye!"));
+}
+
+#[test]
+fn interactive_shell_help_command_works() {
+    Command::cargo_bin("pdf")
+        .expect("binary should build")
+        .write_stdin("help\nquit\n")
+        .assert()
+        .success()
+        .stdout(contains("Shell commands:"))
+        .stdout(contains("quit, exit"));
 }
 
 #[test]

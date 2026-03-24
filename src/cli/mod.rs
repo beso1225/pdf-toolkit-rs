@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use serde_json::json;
+use std::io::{self, Write};
 
 use crate::core::{
     create_blank, extract_pages, inspect_pdf, merge_pdfs_with_options, remove_pages, reorder_pages,
@@ -134,6 +135,13 @@ pub enum OutputFormat {
 
 pub fn run() -> anyhow::Result<()> {
     let cli = Cli::parse();
+    if cli.command.is_none() {
+        return run_interactive_shell();
+    }
+    execute_command(cli)
+}
+
+fn execute_command(cli: Cli) -> anyhow::Result<()> {
     match cli.command {
         Some(Commands::Info { input, format }) => {
             let info = inspect_pdf(std::path::Path::new(&input))?;
@@ -412,4 +420,48 @@ pub fn run() -> anyhow::Result<()> {
 fn print_ok(command: &str) {
     println!("status=ok");
     println!("command={command}");
+}
+
+fn run_interactive_shell() -> anyhow::Result<()> {
+    print_shell_banner();
+    println!("Type `help` for shell commands, or `quit` to exit.");
+
+    let stdin = io::stdin();
+    let mut line = String::new();
+    loop {
+        print!("\x1b[1;36mpdf>\x1b[0m ");
+        io::stdout().flush()?;
+
+        line.clear();
+        let bytes = stdin.read_line(&mut line)?;
+        if bytes == 0 {
+            println!();
+            break;
+        }
+
+        match line.trim() {
+            "" => continue,
+            "help" => print_shell_help(),
+            "exit" | "quit" => {
+                println!("Bye!");
+                break;
+            }
+            _ => {
+                println!("Interactive dispatch is coming next. Type `help` or `quit`.");
+            }
+        }
+    }
+    Ok(())
+}
+
+fn print_shell_banner() {
+    println!("\x1b[1;35m┌──────────────────────────┐\x1b[0m");
+    println!("\x1b[1;35m│\x1b[0m  ✨ PDF Toolkit Shell ✨  \x1b[1;35m│\x1b[0m");
+    println!("\x1b[1;35m└──────────────────────────┘\x1b[0m");
+}
+
+fn print_shell_help() {
+    println!("Shell commands:");
+    println!("  help        Show this help");
+    println!("  quit, exit  Leave the interactive shell");
 }
