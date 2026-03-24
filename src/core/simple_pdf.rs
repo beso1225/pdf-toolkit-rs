@@ -86,8 +86,53 @@ pub fn create_blank(size: &str, output: &Path) -> Result<(), PdfError> {
     Ok(())
 }
 
+pub fn set_metadata(
+    input: &Path,
+    title: Option<&str>,
+    author: Option<&str>,
+    output: &Path,
+) -> Result<(), PdfError> {
+    if title.is_none() && author.is_none() {
+        return Err(PdfError::MetadataRequiresField);
+    }
+    let info = inspect_pdf(input)?;
+    let out = write_simple_pdf_with_metadata(
+        info.page_count,
+        &info.version,
+        title.or(info.title.as_deref()),
+        author.or(info.author.as_deref()),
+    );
+    fs::write(output, out).map_err(|source| PdfError::SavePdf {
+        path: output.display().to_string(),
+        source,
+    })?;
+    Ok(())
+}
+
 pub fn write_simple_pdf(page_count: usize, version: &str) -> Vec<u8> {
-    write_rotated_simple_pdf(page_count, version, &[], 0)
+    write_simple_pdf_with_metadata(page_count, version, None, None)
+}
+
+fn write_simple_pdf_with_metadata(
+    page_count: usize,
+    version: &str,
+    title: Option<&str>,
+    author: Option<&str>,
+) -> Vec<u8> {
+    let mut bytes = write_rotated_simple_pdf(page_count, version, &[], 0);
+    if title.is_none() && author.is_none() {
+        return bytes;
+    }
+
+    let mut suffix = String::new();
+    if let Some(t) = title {
+        suffix.push_str(&format!("\n/Title ({t})"));
+    }
+    if let Some(a) = author {
+        suffix.push_str(&format!("\n/Author ({a})"));
+    }
+    bytes.extend_from_slice(suffix.as_bytes());
+    bytes
 }
 
 fn write_rotated_simple_pdf(
