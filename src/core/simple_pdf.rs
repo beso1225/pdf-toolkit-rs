@@ -16,12 +16,24 @@ pub fn merge_pdfs(inputs: &[&Path], output: &Path) -> Result<(), PdfError> {
     }
 
     let mut page_total = 0usize;
+    let mut merged_rotations: Vec<Option<i32>> = Vec::new();
+    let mut output_version = String::from("1.5");
     for input in inputs {
         let info = inspect_pdf(input)?;
         page_total += info.page_count;
+        if output_version == "1.5" {
+            output_version = info.version.clone();
+        }
+
+        let bytes = fs::read(input).map_err(|source| PdfError::OpenPdf {
+            path: input.display().to_string(),
+            source,
+        })?;
+        let text = String::from_utf8_lossy(&bytes);
+        merged_rotations.extend(extract_page_rotations(&text));
     }
 
-    let out = write_simple_pdf(page_total, "1.5");
+    let out = write_pdf_with_page_rotations(page_total, &output_version, &merged_rotations);
     fs::write(output, out).map_err(|source| PdfError::SavePdf {
         path: output.display().to_string(),
         source,
@@ -171,6 +183,20 @@ fn write_rotated_simple_pdf(
     rotated_pages: &[usize],
     degrees: i32,
 ) -> Vec<u8> {
+    let mut per_page_rotation = vec![None; page_count];
+    for page in rotated_pages {
+        if *page >= 1 && *page <= page_count {
+            per_page_rotation[*page - 1] = Some(degrees);
+        }
+    }
+    write_pdf_with_page_rotations(page_count, version, &per_page_rotation)
+}
+
+fn write_pdf_with_page_rotations(
+    page_count: usize,
+    version: &str,
+    per_page_rotation: &[Option<i32>],
+) -> Vec<u8> {
     let mut objects = Vec::new();
     let mut kids = Vec::new();
 
@@ -186,13 +212,12 @@ fn write_rotated_simple_pdf(
     ));
 
     for i in 0..page_count {
-        let page_num = i + 1;
         let page_id = 3 + i;
-        let rotate = if rotated_pages.contains(&page_num) {
-            format!(" /Rotate {degrees}")
-        } else {
-            String::new()
-        };
+        let rotate = per_page_rotation
+            .get(i)
+            .and_then(|v| *v)
+            .map(|deg| format!(" /Rotate {deg}"))
+            .unwrap_or_default();
         objects.push(format!(
             "{page_id} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200]{rotate} >>\nendobj\n"
         ));
@@ -372,4 +397,26 @@ fn extract_info_value(text: &str, key: &str) -> Option<String> {
     } else {
         Some(value.to_string())
     }
+}
+
+fn extract_page_rotations(text: &str) -> Vec<Option<i32>> {
+    text.split("endobj")
+        .filter_map(|obj| {
+            if !obj.contains("/Type /Page") || obj.contains("/Type /Pages") {
+                return None;
+            }
+            Some(extract_rotation_value(obj))
+        })
+        .collect()
+}
+
+fn extract_rotation_value(page_obj: &str) -> Option<i32> {
+    let token = "/Rotate ";
+    let start = page_obj.find(token)? + token.len();
+    let rest = &page_obj[start..];
+    let value = rest
+        .split_whitespace()
+        .next()
+        .and_then(|v| v.parse::<i32>().ok())?;
+    Some(value)
 }

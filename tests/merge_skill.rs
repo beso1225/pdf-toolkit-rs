@@ -56,3 +56,44 @@ fn merge_command_fails_when_any_input_is_missing() {
         .assert()
         .failure();
 }
+
+#[test]
+fn merge_preserves_page_level_attributes_from_inputs() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let a = dir.path().join("a.pdf");
+    let b_raw = dir.path().join("b-raw.pdf");
+    let b = dir.path().join("b-rotated.pdf");
+    write_pdf(&a);
+    std::fs::write(&b_raw, pdf::core::write_simple_pdf(1, "1.5")).expect("write b raw");
+
+    assert_cmd::Command::cargo_bin("pdf")
+        .expect("bin")
+        .args([
+            "rotate-pages",
+            b_raw.to_string_lossy().as_ref(),
+            "--pages",
+            "1",
+            "--deg",
+            "90",
+            "-o",
+            b.to_string_lossy().as_ref(),
+        ])
+        .assert()
+        .success();
+
+    let output = dir.path().join("merged.pdf");
+    assert_cmd::Command::cargo_bin("pdf")
+        .expect("bin")
+        .args([
+            "merge",
+            a.to_string_lossy().as_ref(),
+            b.to_string_lossy().as_ref(),
+            "-o",
+            output.to_string_lossy().as_ref(),
+        ])
+        .assert()
+        .success();
+
+    let merged = std::fs::read_to_string(&output).expect("merged output should exist");
+    assert!(merged.contains("/Rotate 90"));
+}
