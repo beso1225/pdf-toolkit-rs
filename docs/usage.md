@@ -25,6 +25,10 @@ cargo run -- split input.pdf --by chunk:2 --output-dir parts
 ## Notes
 
 - Page ranges use 1-based indexing.
+- Error output is standardized as `error[<code>]: <message>` for stable scripting/diagnostics.
+- Successful command output begins with:
+  - `status=ok`
+  - `command=<command-name>`
 - `split` supports:
   - `single`
   - `range:<ranges>` (example: `range:1-2,4-5`)

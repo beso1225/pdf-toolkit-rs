@@ -27,3 +27,21 @@ pub enum PdfError {
     #[error("merge options `--links` or `--outlines` require `--index`")]
     MergeIndexRequiredForNavOptions,
 }
+
+impl PdfError {
+    pub fn code(&self) -> &'static str {
+        match self {
+            Self::OpenPdf { .. } => "open_pdf",
+            Self::ParsePdf { .. } => "parse_pdf",
+            Self::MergeRequiresMultipleInputs => "merge_requires_multiple_inputs",
+            Self::SavePdf { .. } => "save_pdf",
+            Self::InvalidPageRange { .. } => "invalid_page_range",
+            Self::RemoveAllPagesForbidden => "remove_all_pages_forbidden",
+            Self::InvalidRotationDegrees { .. } => "invalid_rotation_degrees",
+            Self::InvalidBlankSize { .. } => "invalid_blank_size",
+            Self::MetadataRequiresField => "metadata_requires_field",
+            Self::InvalidSplitMode { .. } => "invalid_split_mode",
+            Self::MergeIndexRequiredForNavOptions => "merge_index_required_for_nav_options",
+        }
+    }
+}

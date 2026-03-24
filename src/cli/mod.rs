@@ -104,6 +104,7 @@ pub fn run() -> anyhow::Result<()> {
     match cli.command {
         Some(Commands::Info { input }) => {
             let info = inspect_pdf(std::path::Path::new(&input))?;
+            print_ok("info");
             println!("version={}", info.version);
             println!("pages={}", info.page_count);
             println!("encrypted={}", info.encrypted);
@@ -127,6 +128,7 @@ pub fn run() -> anyhow::Result<()> {
                 effective_links,
                 effective_outlines,
             )?;
+            print_ok("merge");
             println!("merged_pages_source_count={}", refs.len());
             println!("index={}", index);
             println!("links={}", effective_links);
@@ -143,6 +145,7 @@ pub fn run() -> anyhow::Result<()> {
                 &pages,
                 std::path::Path::new(&output),
             )?;
+            print_ok("extract-pages");
             println!("extracted_pages={}", pages);
             println!("output={}", output);
         }
@@ -156,6 +159,7 @@ pub fn run() -> anyhow::Result<()> {
                 &pages,
                 std::path::Path::new(&output),
             )?;
+            print_ok("remove-pages");
             println!("removed_pages={}", pages);
             println!("output={}", output);
         }
@@ -171,6 +175,7 @@ pub fn run() -> anyhow::Result<()> {
                 deg,
                 std::path::Path::new(&output),
             )?;
+            print_ok("rotate-pages");
             println!("rotated_pages={}", pages);
             println!("degrees={}", deg);
             println!("output={}", output);
@@ -178,6 +183,7 @@ pub fn run() -> anyhow::Result<()> {
         Some(Commands::Create { command }) => match command {
             CreateCommands::Blank { size, output } => {
                 create_blank(&size, std::path::Path::new(&output))?;
+                print_ok("create-blank");
                 println!("created=blank");
                 println!("size={}", size);
                 println!("output={}", output);
@@ -195,6 +201,7 @@ pub fn run() -> anyhow::Result<()> {
                 author.as_deref(),
                 std::path::Path::new(&output),
             )?;
+            print_ok("set-meta");
             println!("set_meta=true");
             println!("output={}", output);
         }
@@ -208,6 +215,7 @@ pub fn run() -> anyhow::Result<()> {
                 &order,
                 std::path::Path::new(&output),
             )?;
+            print_ok("reorder-pages");
             println!("reordered_pages={}", order);
             println!("output={}", output);
         }
@@ -221,6 +229,7 @@ pub fn run() -> anyhow::Result<()> {
                 &by,
                 std::path::Path::new(&output_dir),
             )?;
+            print_ok("split");
             println!("split_by={}", by);
             println!("parts={}", parts);
             println!("output_dir={}", output_dir);
@@ -228,4 +237,9 @@ pub fn run() -> anyhow::Result<()> {
         None => {}
     }
     Ok(())
+}
+
+fn print_ok(command: &str) {
+    println!("status=ok");
+    println!("command={command}");
 }
