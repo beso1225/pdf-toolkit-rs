@@ -37,7 +37,7 @@ fn info_subcommand_fails_for_missing_file() {
         .args(["info", "tests/fixtures/missing.pdf"])
         .assert()
         .failure()
-        .stderr(contains("failed to open PDF"));
+        .stderr(contains("error[open_pdf]: failed to open PDF"));
 }
 
 #[test]

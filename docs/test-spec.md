@@ -26,7 +26,7 @@ This document defines the testing contract for `pdf-toolkit-rs`.
    - behavior checks must be deterministic
 
 4. Golden output tests
-   - stable key output tokens for successful CLI commands
+   - stable key output tokens for successful CLI commands (`status=ok`, `command=...`)
    - stable error-prefix checks for failure output
 
 5. Performance smoke tests

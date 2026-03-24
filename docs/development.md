@@ -11,6 +11,10 @@ Each skill is delivered with this flow:
 5. update documentation (`README.md` and relevant `docs/*.md`)
 6. open PR, self-review, merge
 
+Phase-based CLI roadmap now continues from merge-navigation completion:
+- Phase A: error UX standardization
+- Phase B+: output contract and structured-format expansion
+
 ## Quality gates
 
 Run locally:
