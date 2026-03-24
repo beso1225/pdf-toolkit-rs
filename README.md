@@ -10,6 +10,7 @@ Simple Rust PDF CLI/crate with spec-driven, test-first development.
 cargo run -- info path/to/file.pdf
 cargo run -- merge a.pdf b.pdf -o merged.pdf
 cargo run -- split input.pdf --by chunk:2 --output-dir parts
+cargo run --   # interactive shell mode
 ```
 
 ## Commands
