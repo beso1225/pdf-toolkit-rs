@@ -54,6 +54,16 @@ Near-term focus:
 - support install paths (`cargo install`, prebuilt binaries)
 - define semver and backward-compatibility policy
 
+### Phase 5: Merge navigation features (index + links + outlines)
+
+- Skill 11: object-preserving merge foundation (stable page/object mapping)
+- Skill 12: prepend plain text index page with section start pages
+- Skill 13: destination model for internal page targets
+- Skill 14: clickable index links via link annotations
+- Skill 15: outline/bookmark tree generation
+- Skill 16: unified CLI UX (`merge --index --links --outlines`)
+- Skill 17: compatibility hardening for viewer behavior and edge cases
+
 For every upcoming skill we enforce:
 
 1. Structure inspection + refactor (if needed) before coding
