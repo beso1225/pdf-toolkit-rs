@@ -2,6 +2,7 @@ mod inspect;
 mod links;
 mod merge;
 mod ops;
+mod outlines;
 mod split;
 mod write;
 
