@@ -5,6 +5,7 @@ use crate::core::PdfError;
 use super::{
     inspect::{extract_page_rotations, inspect_pdf},
     links::{build_link_annotations, write_pdf_with_link_annotations},
+    outlines::{build_outline_entries, write_pdf_with_outline_entries},
     write::{
         write_pdf_with_dest_entries, write_pdf_with_index_entries, write_pdf_with_page_rotations,
     },
@@ -34,6 +35,12 @@ pub fn merge_pdfs_with_index(inputs: &[&Path], output: &Path, index: bool) -> Re
     let out = if plan.include_index {
         let annotations = build_link_annotations(&plan.dest_entries);
         write_pdf_with_link_annotations(out, &annotations)
+    } else {
+        out
+    };
+    let out = if plan.include_index {
+        let outline_entries = build_outline_entries(&plan.dest_entries);
+        write_pdf_with_outline_entries(out, &outline_entries)
     } else {
         out
     };

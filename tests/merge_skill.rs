@@ -132,4 +132,6 @@ fn merge_with_index_prepends_index_page_and_entries() {
     assert!(merged.contains("/DestEntry (dest-2|4|chapter-b.pdf)"));
     assert!(merged.contains("/LinkAnnot (index-1|dest-1|chapter-a.pdf)"));
     assert!(merged.contains("/LinkAnnot (index-2|dest-2|chapter-b.pdf)"));
+    assert!(merged.contains("/OutlineEntry (outline-1|dest-1|chapter-a.pdf)"));
+    assert!(merged.contains("/OutlineEntry (outline-2|dest-2|chapter-b.pdf)"));
 }
