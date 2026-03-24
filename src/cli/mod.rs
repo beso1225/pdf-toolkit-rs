@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::core::{extract_pages, inspect_pdf, merge_pdfs, remove_pages};
+use crate::core::{extract_pages, inspect_pdf, merge_pdfs, remove_pages, rotate_pages};
 
 #[derive(Debug, Parser)]
 #[command(name = "pdf-toolkit")]
@@ -33,6 +33,16 @@ pub enum Commands {
         input: String,
         #[arg(long)]
         pages: String,
+        #[arg(short, long)]
+        output: String,
+    },
+    /// Rotate selected pages in a PDF
+    RotatePages {
+        input: String,
+        #[arg(long)]
+        pages: String,
+        #[arg(long)]
+        deg: i32,
         #[arg(short, long)]
         output: String,
     },
@@ -79,6 +89,22 @@ pub fn run() -> anyhow::Result<()> {
                 std::path::Path::new(&output),
             )?;
             println!("removed_pages={}", pages);
+            println!("output={}", output);
+        }
+        Some(Commands::RotatePages {
+            input,
+            pages,
+            deg,
+            output,
+        }) => {
+            rotate_pages(
+                std::path::Path::new(&input),
+                &pages,
+                deg,
+                std::path::Path::new(&output),
+            )?;
+            println!("rotated_pages={}", pages);
+            println!("degrees={}", deg);
             println!("output={}", output);
         }
         None => {}
