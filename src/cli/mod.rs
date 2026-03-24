@@ -425,6 +425,7 @@ fn print_ok(command: &str) {
 fn run_interactive_shell() -> anyhow::Result<()> {
     print_shell_banner();
     println!("Type `help` for shell commands, or `quit` to exit.");
+    println!("Try: info <file.pdf>  |  merge a.pdf b.pdf -o out.pdf");
 
     let stdin = io::stdin();
     let mut line = String::new();
@@ -480,5 +481,7 @@ fn print_shell_banner() {
 fn print_shell_help() {
     println!("Shell commands:");
     println!("  help        Show this help");
+    println!("  run <pdf-command>  Execute a command explicitly");
+    println!("              (plain command input also works)");
     println!("  quit, exit  Leave the interactive shell");
 }
