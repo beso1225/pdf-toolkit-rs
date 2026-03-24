@@ -88,7 +88,7 @@ fn collect_merge_plan(inputs: &[&Path], include_index: bool) -> Result<MergePlan
     let mut destination_counter = 1usize;
     for input in inputs {
         let info = inspect_pdf(input)?;
-        let display_name = input_display_name(input);
+        let display_name = sanitize_marker_label(&input_display_name(input));
         if include_index {
             index_entries.push((display_name.clone(), running_start));
             dest_entries.push((
@@ -131,4 +131,16 @@ fn input_display_name(path: &Path) -> String {
     path.file_name()
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_else(|| path.display().to_string())
+}
+
+fn sanitize_marker_label(label: &str) -> String {
+    label
+        .chars()
+        .map(|c| match c {
+            '(' => '[',
+            ')' => ']',
+            '|' => '_',
+            _ => c,
+        })
+        .collect()
 }
