@@ -40,6 +40,22 @@ pub fn extract_pages(input: &Path, pages: &str, output: &Path) -> Result<(), Pdf
     Ok(())
 }
 
+pub fn remove_pages(input: &Path, pages: &str, output: &Path) -> Result<(), PdfError> {
+    let info = inspect_pdf(input)?;
+    let selected = parse_page_ranges(pages, info.page_count)?;
+    if selected.len() >= info.page_count {
+        return Err(PdfError::RemoveAllPagesForbidden);
+    }
+
+    let remaining = info.page_count - selected.len();
+    let out = write_simple_pdf(remaining, &info.version);
+    fs::write(output, out).map_err(|source| PdfError::SavePdf {
+        path: output.display().to_string(),
+        source,
+    })?;
+    Ok(())
+}
+
 pub fn write_simple_pdf(page_count: usize, version: &str) -> Vec<u8> {
     let mut objects = Vec::new();
     let mut kids = Vec::new();

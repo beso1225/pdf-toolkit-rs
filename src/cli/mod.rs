@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::core::{extract_pages, inspect_pdf, merge_pdfs};
+use crate::core::{extract_pages, inspect_pdf, merge_pdfs, remove_pages};
 
 #[derive(Debug, Parser)]
 #[command(name = "pdf-toolkit")]
@@ -22,6 +22,14 @@ pub enum Commands {
     },
     /// Extract a page subset into a new PDF
     ExtractPages {
+        input: String,
+        #[arg(long)]
+        pages: String,
+        #[arg(short, long)]
+        output: String,
+    },
+    /// Remove selected pages from a PDF
+    RemovePages {
         input: String,
         #[arg(long)]
         pages: String,
@@ -58,6 +66,19 @@ pub fn run() -> anyhow::Result<()> {
                 std::path::Path::new(&output),
             )?;
             println!("extracted_pages={}", pages);
+            println!("output={}", output);
+        }
+        Some(Commands::RemovePages {
+            input,
+            pages,
+            output,
+        }) => {
+            remove_pages(
+                std::path::Path::new(&input),
+                &pages,
+                std::path::Path::new(&output),
+            )?;
+            println!("removed_pages={}", pages);
             println!("output={}", output);
         }
         None => {}
