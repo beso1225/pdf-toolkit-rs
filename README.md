@@ -16,6 +16,7 @@ cargo run -- split input.pdf --by chunk:2 --output-dir parts
 
 - `info <input.pdf>`
 - `merge <inputs...> -o <output.pdf>`
+- `merge <inputs...> [--index] -o <output.pdf>`
 - `extract-pages <input.pdf> --pages <range> -o <output.pdf>`
 - `remove-pages <input.pdf> --pages <range> -o <output.pdf>`
 - `rotate-pages <input.pdf> --pages <range> --deg <90|180|270> -o <output.pdf>`

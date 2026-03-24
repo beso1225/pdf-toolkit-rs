@@ -1,7 +1,11 @@
 use std::path::Path;
 
 fn write_pdf(path: &Path) {
-    std::fs::write(path, pdf::core::write_simple_pdf(1, "1.5")).expect("fixture should save");
+    write_pdf_pages(path, 1);
+}
+
+fn write_pdf_pages(path: &Path, pages: usize) {
+    std::fs::write(path, pdf::core::write_simple_pdf(pages, "1.5")).expect("fixture should save");
 }
 
 fn page_count_in_bytes(bytes: &[u8]) -> usize {
@@ -96,4 +100,32 @@ fn merge_preserves_page_level_attributes_from_inputs() {
 
     let merged = std::fs::read_to_string(&output).expect("merged output should exist");
     assert!(merged.contains("/Rotate 90"));
+}
+
+#[test]
+fn merge_with_index_prepends_index_page_and_entries() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let a = dir.path().join("chapter-a.pdf");
+    let b = dir.path().join("chapter-b.pdf");
+    write_pdf_pages(&a, 2);
+    write_pdf_pages(&b, 1);
+
+    let output = dir.path().join("merged-index.pdf");
+    assert_cmd::Command::cargo_bin("pdf")
+        .expect("bin")
+        .args([
+            "merge",
+            a.to_string_lossy().as_ref(),
+            b.to_string_lossy().as_ref(),
+            "--index",
+            "-o",
+            output.to_string_lossy().as_ref(),
+        ])
+        .assert()
+        .success();
+
+    let merged = std::fs::read_to_string(&output).expect("merged output should exist");
+    assert_eq!(page_count_in_bytes(merged.as_bytes()), 4);
+    assert!(merged.contains("/IndexEntry (chapter-a.pdf|2)"));
+    assert!(merged.contains("/IndexEntry (chapter-b.pdf|4)"));
 }

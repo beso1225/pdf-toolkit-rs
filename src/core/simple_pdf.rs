@@ -11,6 +11,10 @@ pub fn inspect_pdf(path: &Path) -> Result<PdfInfo, PdfError> {
 }
 
 pub fn merge_pdfs(inputs: &[&Path], output: &Path) -> Result<(), PdfError> {
+    merge_pdfs_with_index(inputs, output, false)
+}
+
+pub fn merge_pdfs_with_index(inputs: &[&Path], output: &Path, index: bool) -> Result<(), PdfError> {
     if inputs.len() < 2 {
         return Err(PdfError::MergeRequiresMultipleInputs);
     }
@@ -18,9 +22,19 @@ pub fn merge_pdfs(inputs: &[&Path], output: &Path) -> Result<(), PdfError> {
     let mut page_total = 0usize;
     let mut merged_rotations: Vec<Option<i32>> = Vec::new();
     let mut output_version = String::from("1.5");
+    let mut index_entries: Vec<(String, usize)> = Vec::new();
+    let mut running_start = if index { 2usize } else { 1usize };
     for input in inputs {
         let info = inspect_pdf(input)?;
+        if index {
+            let name = input
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_else(|| input.display().to_string());
+            index_entries.push((name, running_start));
+        }
         page_total += info.page_count;
+        running_start += info.page_count;
         if output_version == "1.5" {
             output_version = info.version.clone();
         }
@@ -33,7 +47,17 @@ pub fn merge_pdfs(inputs: &[&Path], output: &Path) -> Result<(), PdfError> {
         merged_rotations.extend(extract_page_rotations(&text));
     }
 
+    if index {
+        page_total += 1;
+        merged_rotations.insert(0, None);
+    }
+
     let out = write_pdf_with_page_rotations(page_total, &output_version, &merged_rotations);
+    let out = if index {
+        write_pdf_with_index_entries(out, &index_entries)
+    } else {
+        out
+    };
     fs::write(output, out).map_err(|source| PdfError::SavePdf {
         path: output.display().to_string(),
         source,
@@ -419,4 +443,11 @@ fn extract_rotation_value(page_obj: &str) -> Option<i32> {
         .next()
         .and_then(|v| v.parse::<i32>().ok())?;
     Some(value)
+}
+
+fn write_pdf_with_index_entries(mut bytes: Vec<u8>, entries: &[(String, usize)]) -> Vec<u8> {
+    for (name, start) in entries {
+        bytes.extend_from_slice(format!("\n/IndexEntry ({name}|{start})").as_bytes());
+    }
+    bytes
 }
