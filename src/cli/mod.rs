@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 use crate::core::{
-    create_blank, extract_pages, inspect_pdf, merge_pdfs_with_index, remove_pages, reorder_pages,
+    create_blank, extract_pages, inspect_pdf, merge_pdfs_with_options, remove_pages, reorder_pages,
     rotate_pages, set_metadata, split_pdf,
 };
 
@@ -22,6 +22,10 @@ pub enum Commands {
         inputs: Vec<String>,
         #[arg(long, default_value_t = false)]
         index: bool,
+        #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+        links: bool,
+        #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+        outlines: bool,
         #[arg(short, long)]
         output: String,
     },
@@ -109,12 +113,24 @@ pub fn run() -> anyhow::Result<()> {
         Some(Commands::Merge {
             inputs,
             index,
+            links,
+            outlines,
             output,
         }) => {
             let refs: Vec<&std::path::Path> = inputs.iter().map(std::path::Path::new).collect();
-            merge_pdfs_with_index(&refs, std::path::Path::new(&output), index)?;
+            let effective_links = if index { links } else { false };
+            let effective_outlines = if index { outlines } else { false };
+            merge_pdfs_with_options(
+                &refs,
+                std::path::Path::new(&output),
+                index,
+                effective_links,
+                effective_outlines,
+            )?;
             println!("merged_pages_source_count={}", refs.len());
             println!("index={}", index);
+            println!("links={}", effective_links);
+            println!("outlines={}", effective_outlines);
             println!("output={}", output);
         }
         Some(Commands::ExtractPages {

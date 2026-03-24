@@ -12,10 +12,24 @@ use super::{
 };
 
 pub fn merge_pdfs(inputs: &[&Path], output: &Path) -> Result<(), PdfError> {
-    merge_pdfs_with_index(inputs, output, false)
+    merge_pdfs_with_options(inputs, output, false, false, false)
 }
 
 pub fn merge_pdfs_with_index(inputs: &[&Path], output: &Path, index: bool) -> Result<(), PdfError> {
+    merge_pdfs_with_options(inputs, output, index, index, index)
+}
+
+pub fn merge_pdfs_with_options(
+    inputs: &[&Path],
+    output: &Path,
+    index: bool,
+    links: bool,
+    outlines: bool,
+) -> Result<(), PdfError> {
+    if (links || outlines) && !index {
+        return Err(PdfError::MergeIndexRequiredForNavOptions);
+    }
+
     let plan = collect_merge_plan(inputs, index)?;
     let out = write_pdf_with_page_rotations(
         plan.page_total,
@@ -32,13 +46,13 @@ pub fn merge_pdfs_with_index(inputs: &[&Path], output: &Path, index: bool) -> Re
     } else {
         out
     };
-    let out = if plan.include_index {
+    let out = if plan.include_index && links {
         let annotations = build_link_annotations(&plan.dest_entries);
         write_pdf_with_link_annotations(out, &annotations)
     } else {
         out
     };
-    let out = if plan.include_index {
+    let out = if plan.include_index && outlines {
         let outline_entries = build_outline_entries(&plan.dest_entries);
         write_pdf_with_outline_entries(out, &outline_entries)
     } else {
