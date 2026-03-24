@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 use crate::core::{
-    create_blank, extract_pages, inspect_pdf, merge_pdfs, remove_pages, reorder_pages,
+    create_blank, extract_pages, inspect_pdf, merge_pdfs_with_index, remove_pages, reorder_pages,
     rotate_pages, set_metadata, split_pdf,
 };
 
@@ -20,6 +20,8 @@ pub enum Commands {
     /// Merge PDF files in order
     Merge {
         inputs: Vec<String>,
+        #[arg(long, default_value_t = false)]
+        index: bool,
         #[arg(short, long)]
         output: String,
     },
@@ -104,10 +106,15 @@ pub fn run() -> anyhow::Result<()> {
             println!("title={}", info.title.as_deref().unwrap_or(""));
             println!("author={}", info.author.as_deref().unwrap_or(""));
         }
-        Some(Commands::Merge { inputs, output }) => {
+        Some(Commands::Merge {
+            inputs,
+            index,
+            output,
+        }) => {
             let refs: Vec<&std::path::Path> = inputs.iter().map(std::path::Path::new).collect();
-            merge_pdfs(&refs, std::path::Path::new(&output))?;
+            merge_pdfs_with_index(&refs, std::path::Path::new(&output), index)?;
             println!("merged_pages_source_count={}", refs.len());
+            println!("index={}", index);
             println!("output={}", output);
         }
         Some(Commands::ExtractPages {
