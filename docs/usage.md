@@ -10,6 +10,7 @@ cargo build
 
 ```bash
 cargo run -- info input.pdf
+cargo run -- info input.pdf --format json
 cargo run -- merge a.pdf b.pdf -o merged.pdf
 cargo run -- merge a.pdf b.pdf --index -o merged-index.pdf
 cargo run -- merge a.pdf b.pdf --index --links=false --outlines=false -o merged-index-basic.pdf
@@ -29,6 +30,7 @@ cargo run -- split input.pdf --by chunk:2 --output-dir parts
 - Successful command output begins with:
   - `status=ok`
   - `command=<command-name>`
+- `info` supports `--format text|json` (default: `text`).
 - `split` supports:
   - `single`
   - `range:<ranges>` (example: `range:1-2,4-5`)
