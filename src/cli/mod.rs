@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 
 use crate::core::{
     create_blank, extract_pages, inspect_pdf, merge_pdfs, remove_pages, reorder_pages,
-    rotate_pages, set_metadata,
+    rotate_pages, set_metadata, split_pdf,
 };
 
 #[derive(Debug, Parser)]
@@ -71,6 +71,14 @@ pub enum Commands {
         order: String,
         #[arg(short, long)]
         output: String,
+    },
+    /// Split PDF into multiple parts
+    Split {
+        input: String,
+        #[arg(long)]
+        by: String,
+        #[arg(long = "output-dir")]
+        output_dir: String,
     },
 }
 
@@ -179,6 +187,20 @@ pub fn run() -> anyhow::Result<()> {
             )?;
             println!("reordered_pages={}", order);
             println!("output={}", output);
+        }
+        Some(Commands::Split {
+            input,
+            by,
+            output_dir,
+        }) => {
+            let parts = split_pdf(
+                std::path::Path::new(&input),
+                &by,
+                std::path::Path::new(&output_dir),
+            )?;
+            println!("split_by={}", by);
+            println!("parts={}", parts);
+            println!("output_dir={}", output_dir);
         }
         None => {}
     }
