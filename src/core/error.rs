@@ -18,4 +18,6 @@ pub enum PdfError {
     RemoveAllPagesForbidden,
     #[error("invalid rotation degrees `{degrees}`: allowed values are 90, 180, 270")]
     InvalidRotationDegrees { degrees: i32 },
+    #[error("invalid blank page size `{size}`; expected A4, Letter, or WxH (e.g., 400x300)")]
+    InvalidBlankSize { size: String },
 }

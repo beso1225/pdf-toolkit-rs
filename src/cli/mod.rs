@@ -1,6 +1,8 @@
 use clap::{Parser, Subcommand};
 
-use crate::core::{extract_pages, inspect_pdf, merge_pdfs, remove_pages, rotate_pages};
+use crate::core::{
+    create_blank, extract_pages, inspect_pdf, merge_pdfs, remove_pages, rotate_pages,
+};
 
 #[derive(Debug, Parser)]
 #[command(name = "pdf-toolkit")]
@@ -43,6 +45,22 @@ pub enum Commands {
         pages: String,
         #[arg(long)]
         deg: i32,
+        #[arg(short, long)]
+        output: String,
+    },
+    /// PDF creation commands
+    Create {
+        #[command(subcommand)]
+        command: CreateCommands,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum CreateCommands {
+    /// Create a blank single-page PDF
+    Blank {
+        #[arg(long)]
+        size: String,
         #[arg(short, long)]
         output: String,
     },
@@ -107,6 +125,14 @@ pub fn run() -> anyhow::Result<()> {
             println!("degrees={}", deg);
             println!("output={}", output);
         }
+        Some(Commands::Create { command }) => match command {
+            CreateCommands::Blank { size, output } => {
+                create_blank(&size, std::path::Path::new(&output))?;
+                println!("created=blank");
+                println!("size={}", size);
+                println!("output={}", output);
+            }
+        },
         None => {}
     }
     Ok(())

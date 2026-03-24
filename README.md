@@ -11,13 +11,13 @@ A spec-driven Rust PDF toolkit implemented without PDF-specific crates.
 - `extract-pages <input.pdf> --pages <range> -o <output.pdf>`
 - `remove-pages <input.pdf> --pages <range> -o <output.pdf>`
 - `rotate-pages <input.pdf> --pages <range> --deg <90|180|270> -o <output.pdf>`
+- `create blank --size <A4|Letter|WxH> -o <output.pdf>`
 
 ## Roadmap (next steps)
 
 Near-term skills:
 
 - `rotate-pages <input.pdf> --pages <range> --deg <90|180|270> -o <output.pdf>`
-- `create blank --size <A4|Letter|WxH> -o <output.pdf>`
 - `set-meta <input.pdf> --title ... --author ... -o <output.pdf>`
 - `reorder-pages <input.pdf> --order <range syntax> -o <output.pdf>`
 - `split <input.pdf> --by <single|range|chunk>`
@@ -56,7 +56,7 @@ Summary:
 The suite includes:
 
 - CLI smoke tests
-- skill-specific tests (`merge`, `extract-pages`, `remove-pages`, `rotate-pages`, range engine)
+- skill-specific tests (`merge`, `extract-pages`, `remove-pages`, `rotate-pages`, `create blank`, range engine)
 - public-inspired compatibility tests (pdf.js / qpdf / pdfium style)
 - golden CLI output checks
 - performance smoke test
@@ -85,4 +85,5 @@ cargo run -- merge a.pdf b.pdf -o merged.pdf
 cargo run -- extract-pages input.pdf --pages 2,4-5 -o out.pdf
 cargo run -- remove-pages input.pdf --pages 1,3 -o out.pdf
 cargo run -- rotate-pages input.pdf --pages 2,4 --deg 90 -o out.pdf
+cargo run -- create blank --size A4 -o blank.pdf
 ```
