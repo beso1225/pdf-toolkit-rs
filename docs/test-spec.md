@@ -52,7 +52,8 @@ For each new skill:
 1. add failing tests first
 2. implement minimal code to pass
 3. run quality gates
-4. merge through PR with self-review note
+4. update docs (`README.md` + affected files under `docs/`)
+5. merge through PR with self-review note
 
 ## Quality gate commands
 

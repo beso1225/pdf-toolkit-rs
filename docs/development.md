@@ -8,7 +8,8 @@ Each skill is delivered with this flow:
 2. write failing tests first
 3. implement minimum code to pass
 4. run quality gates
-5. open PR, self-review, merge
+5. update documentation (`README.md` and relevant `docs/*.md`)
+6. open PR, self-review, merge
 
 ## Quality gates
 
