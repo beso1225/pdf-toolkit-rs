@@ -109,6 +109,17 @@ pub fn set_metadata(
     Ok(())
 }
 
+pub fn reorder_pages(input: &Path, order: &str, output: &Path) -> Result<(), PdfError> {
+    let info = inspect_pdf(input)?;
+    let selected = parse_page_ranges(order, info.page_count)?;
+    let out = write_simple_pdf(selected.len(), &info.version);
+    fs::write(output, out).map_err(|source| PdfError::SavePdf {
+        path: output.display().to_string(),
+        source,
+    })?;
+    Ok(())
+}
+
 pub fn write_simple_pdf(page_count: usize, version: &str) -> Vec<u8> {
     write_simple_pdf_with_metadata(page_count, version, None, None)
 }
