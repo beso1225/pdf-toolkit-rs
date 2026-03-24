@@ -16,7 +16,7 @@ Goal: merge multiple PDFs with navigable index, links, and outlines.
 4. Skill 14: clickable index link annotations (done)
 5. Skill 15: outline/bookmark tree support (done)
 6. Skill 16: CLI UX for merge index/link/outline options (done)
-7. Skill 17: compatibility hardening for viewer behavior
+7. Skill 17: compatibility hardening for viewer behavior (done)
 
 ## Longer-term
 

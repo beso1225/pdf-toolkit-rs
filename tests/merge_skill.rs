@@ -166,3 +166,32 @@ fn merge_with_index_links_outlines_flags_controls_outputs() {
     assert!(!merged.contains("/LinkAnnot (index-1|dest-1|a.pdf)"));
     assert!(!merged.contains("/OutlineEntry (outline-1|dest-1|a.pdf)"));
 }
+
+#[test]
+fn merge_with_index_sanitizes_marker_labels_for_special_chars() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let a = dir.path().join("chap(1)|a.pdf");
+    let b = dir.path().join("b).pdf");
+    write_pdf_pages(&a, 1);
+    write_pdf_pages(&b, 1);
+
+    let output = dir.path().join("merged-sanitized.pdf");
+    assert_cmd::Command::cargo_bin("pdf")
+        .expect("bin")
+        .args([
+            "merge",
+            a.to_string_lossy().as_ref(),
+            b.to_string_lossy().as_ref(),
+            "--index",
+            "-o",
+            output.to_string_lossy().as_ref(),
+        ])
+        .assert()
+        .success();
+
+    let merged = std::fs::read_to_string(&output).expect("merged output should exist");
+    assert!(merged.contains("/IndexEntry (chap[1]_a.pdf|2)"));
+    assert!(merged.contains("/DestEntry (dest-1|2|chap[1]_a.pdf)"));
+    assert!(merged.contains("/LinkAnnot (index-1|dest-1|chap[1]_a.pdf)"));
+    assert!(merged.contains("/OutlineEntry (outline-1|dest-1|chap[1]_a.pdf)"));
+}

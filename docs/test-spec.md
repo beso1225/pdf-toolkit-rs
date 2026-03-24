@@ -44,6 +44,7 @@ This document defines the testing contract for `pdf-toolkit-rs`.
 - `set-meta`: title/author write behavior; at least one field required
 - `reorder-pages`: output count/order contract; out-of-range fails
 - `split`: single/range/chunk modes; invalid mode fails
+- merge navigation markers: index/destination/link/outline labels are deterministic and safely encoded
 
 ## Skill workflow requirement (mandatory)
 
