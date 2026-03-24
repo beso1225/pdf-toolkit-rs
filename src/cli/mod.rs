@@ -1,4 +1,5 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
+use serde_json::json;
 
 use crate::core::{
     create_blank, extract_pages, inspect_pdf, merge_pdfs_with_options, remove_pages, reorder_pages,
@@ -16,7 +17,11 @@ pub struct Cli {
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     /// Inspect a PDF file
-    Info { input: String },
+    Info {
+        input: String,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
+    },
     /// Merge PDF files in order
     Merge {
         inputs: Vec<String>,
@@ -99,17 +104,39 @@ pub enum CreateCommands {
     },
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum OutputFormat {
+    Text,
+    Json,
+}
+
 pub fn run() -> anyhow::Result<()> {
     let cli = Cli::parse();
     match cli.command {
-        Some(Commands::Info { input }) => {
+        Some(Commands::Info { input, format }) => {
             let info = inspect_pdf(std::path::Path::new(&input))?;
-            print_ok("info");
-            println!("version={}", info.version);
-            println!("pages={}", info.page_count);
-            println!("encrypted={}", info.encrypted);
-            println!("title={}", info.title.as_deref().unwrap_or(""));
-            println!("author={}", info.author.as_deref().unwrap_or(""));
+            match format {
+                OutputFormat::Text => {
+                    print_ok("info");
+                    println!("version={}", info.version);
+                    println!("pages={}", info.page_count);
+                    println!("encrypted={}", info.encrypted);
+                    println!("title={}", info.title.as_deref().unwrap_or(""));
+                    println!("author={}", info.author.as_deref().unwrap_or(""));
+                }
+                OutputFormat::Json => {
+                    let payload = json!({
+                        "status": "ok",
+                        "command": "info",
+                        "version": info.version,
+                        "pages": info.page_count,
+                        "encrypted": info.encrypted,
+                        "title": info.title.unwrap_or_default(),
+                        "author": info.author.unwrap_or_default(),
+                    });
+                    println!("{}", payload);
+                }
+            }
         }
         Some(Commands::Merge {
             inputs,

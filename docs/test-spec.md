@@ -35,7 +35,7 @@ This document defines the testing contract for `pdf-toolkit-rs`.
 
 ## Command-specific minimum assertions
 
-- `info`: version/pages/encrypted fields are present and correct
+- `info`: version/pages/encrypted fields are present and correct in text mode, and JSON payload shape is stable in `--format json`
 - `merge`: expected output page count; missing input fails
 - `extract-pages`: selected page count correctness; out-of-range fails
 - `remove-pages`: remaining page count correctness; remove-all forbidden

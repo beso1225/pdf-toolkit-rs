@@ -23,6 +23,25 @@ fn info_output_has_stable_key_value_shape() {
 }
 
 #[test]
+fn info_output_supports_json_format() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let input = dir.path().join("input.pdf");
+    std::fs::write(&input, pdf::core::write_simple_pdf(2, "1.5")).expect("write fixture");
+
+    Command::cargo_bin("pdf")
+        .expect("binary")
+        .args(["info", input.to_string_lossy().as_ref(), "--format", "json"])
+        .assert()
+        .success()
+        .stdout(contains("\"status\":\"ok\""))
+        .stdout(contains("\"command\":\"info\""))
+        .stdout(contains("\"version\":\"1.5\""))
+        .stdout(contains("\"pages\":2"))
+        .stdout(contains("\"encrypted\":false"))
+        .stderr("");
+}
+
+#[test]
 fn extract_output_mentions_selected_range_and_path() {
     let dir = tempfile::tempdir().expect("tempdir");
     let input = dir.path().join("input.pdf");
