@@ -1,0 +1,10 @@
+{
+  "source": "inspired-by: qpdf page subset extraction workflows",
+  "case_id": "qpdf-extract-subset-001",
+  "description": "Extracting pages 2,4-5 from a 5-page PDF should produce a 3-page output",
+  "input_pages": 5,
+  "range": "2,4-5",
+  "expect": {
+    "output_pages": 3
+  }
+}
