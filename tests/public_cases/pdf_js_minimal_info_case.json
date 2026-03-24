@@ -1,0 +1,10 @@
+{
+  "source": "inspired-by: mozilla/pdf.js test corpus patterns",
+  "case_id": "pdfjs-minimal-info-001",
+  "description": "Minimal one-page PDF should be parsable by info command",
+  "input": "tests/fixtures/minimal.pdf",
+  "expect": {
+    "page_count": 1,
+    "encrypted": false
+  }
+}

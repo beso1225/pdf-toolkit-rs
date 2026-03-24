@@ -1,0 +1,12 @@
+{
+  "source": "inspired-by: qpdf CLI compatibility smoke tests",
+  "case_id": "qpdf-merge-smoke-001",
+  "description": "Merging two one-page PDFs should produce two pages in output order",
+  "inputs": [
+    "tests/fixtures/minimal.pdf",
+    "tests/fixtures/minimal.pdf"
+  ],
+  "expect": {
+    "page_count": 2
+  }
+}
