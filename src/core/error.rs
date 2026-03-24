@@ -20,4 +20,6 @@ pub enum PdfError {
     InvalidRotationDegrees { degrees: i32 },
     #[error("invalid blank page size `{size}`; expected A4, Letter, or WxH (e.g., 400x300)")]
     InvalidBlankSize { size: String },
+    #[error("set-meta requires at least one metadata field (title or author)")]
+    MetadataRequiresField,
 }

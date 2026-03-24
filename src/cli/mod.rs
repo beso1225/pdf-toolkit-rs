@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 
 use crate::core::{
-    create_blank, extract_pages, inspect_pdf, merge_pdfs, remove_pages, rotate_pages,
+    create_blank, extract_pages, inspect_pdf, merge_pdfs, remove_pages, rotate_pages, set_metadata,
 };
 
 #[derive(Debug, Parser)]
@@ -52,6 +52,16 @@ pub enum Commands {
     Create {
         #[command(subcommand)]
         command: CreateCommands,
+    },
+    /// Set metadata fields on a PDF
+    SetMeta {
+        input: String,
+        #[arg(long)]
+        title: Option<String>,
+        #[arg(long)]
+        author: Option<String>,
+        #[arg(short, long)]
+        output: String,
     },
 }
 
@@ -133,6 +143,21 @@ pub fn run() -> anyhow::Result<()> {
                 println!("output={}", output);
             }
         },
+        Some(Commands::SetMeta {
+            input,
+            title,
+            author,
+            output,
+        }) => {
+            set_metadata(
+                std::path::Path::new(&input),
+                title.as_deref(),
+                author.as_deref(),
+                std::path::Path::new(&output),
+            )?;
+            println!("set_meta=true");
+            println!("output={}", output);
+        }
         None => {}
     }
     Ok(())
