@@ -76,6 +76,16 @@ pub fn rotate_pages(
     Ok(())
 }
 
+pub fn create_blank(size: &str, output: &Path) -> Result<(), PdfError> {
+    let (width, height) = parse_blank_size(size)?;
+    let out = write_single_page_pdf_with_size("1.5", width, height);
+    fs::write(output, out).map_err(|source| PdfError::SavePdf {
+        path: output.display().to_string(),
+        source,
+    })?;
+    Ok(())
+}
+
 pub fn write_simple_pdf(page_count: usize, version: &str) -> Vec<u8> {
     write_rotated_simple_pdf(page_count, version, &[], 0)
 }
@@ -112,6 +122,60 @@ fn write_rotated_simple_pdf(
             "{page_id} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200]{rotate} >>\nendobj\n"
         ));
     }
+
+    let mut out = format!("%PDF-{version}\n");
+    let mut offsets = vec![0usize];
+    for obj in &objects {
+        offsets.push(out.len());
+        out.push_str(obj);
+    }
+    let xref_start = out.len();
+    out.push_str(&format!("xref\n0 {}\n", offsets.len()));
+    out.push_str("0000000000 65535 f \n");
+    for offset in offsets.iter().skip(1) {
+        out.push_str(&format!("{offset:010} 00000 n \n"));
+    }
+    out.push_str(&format!(
+        "trailer\n<< /Root 1 0 R /Size {} >>\nstartxref\n{}\n%%EOF\n",
+        offsets.len(),
+        xref_start
+    ));
+    out.into_bytes()
+}
+
+fn parse_blank_size(size: &str) -> Result<(i32, i32), PdfError> {
+    let normalized = size.trim();
+    if normalized.eq_ignore_ascii_case("A4") {
+        return Ok((595, 842));
+    }
+    if normalized.eq_ignore_ascii_case("Letter") {
+        return Ok((612, 792));
+    }
+
+    let Some((w, h)) = normalized.split_once('x') else {
+        return Err(PdfError::InvalidBlankSize {
+            size: size.to_string(),
+        });
+    };
+    let width = w.parse::<i32>().ok();
+    let height = h.parse::<i32>().ok();
+    match (width, height) {
+        (Some(w), Some(h)) if w > 0 && h > 0 => Ok((w, h)),
+        _ => Err(PdfError::InvalidBlankSize {
+            size: size.to_string(),
+        }),
+    }
+}
+
+fn write_single_page_pdf_with_size(version: &str, width: i32, height: i32) -> Vec<u8> {
+    let objects = vec![
+        "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n".to_string(),
+        "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n".to_string(),
+        format!(
+            "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] >>\nendobj\n",
+            width, height
+        ),
+    ];
 
     let mut out = format!("%PDF-{version}\n");
     let mut offsets = vec![0usize];
