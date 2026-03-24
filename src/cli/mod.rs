@@ -1,7 +1,8 @@
 use clap::{Parser, Subcommand};
 
 use crate::core::{
-    create_blank, extract_pages, inspect_pdf, merge_pdfs, remove_pages, rotate_pages, set_metadata,
+    create_blank, extract_pages, inspect_pdf, merge_pdfs, remove_pages, reorder_pages,
+    rotate_pages, set_metadata,
 };
 
 #[derive(Debug, Parser)]
@@ -60,6 +61,14 @@ pub enum Commands {
         title: Option<String>,
         #[arg(long)]
         author: Option<String>,
+        #[arg(short, long)]
+        output: String,
+    },
+    /// Reorder pages according to provided order list/ranges
+    ReorderPages {
+        input: String,
+        #[arg(long)]
+        order: String,
         #[arg(short, long)]
         output: String,
     },
@@ -156,6 +165,19 @@ pub fn run() -> anyhow::Result<()> {
                 std::path::Path::new(&output),
             )?;
             println!("set_meta=true");
+            println!("output={}", output);
+        }
+        Some(Commands::ReorderPages {
+            input,
+            order,
+            output,
+        }) => {
+            reorder_pages(
+                std::path::Path::new(&input),
+                &order,
+                std::path::Path::new(&output),
+            )?;
+            println!("reordered_pages={}", order);
             println!("output={}", output);
         }
         None => {}

@@ -13,13 +13,13 @@ A spec-driven Rust PDF toolkit implemented without PDF-specific crates.
 - `rotate-pages <input.pdf> --pages <range> --deg <90|180|270> -o <output.pdf>`
 - `create blank --size <A4|Letter|WxH> -o <output.pdf>`
 - `set-meta <input.pdf> --title ... --author ... -o <output.pdf>`
+- `reorder-pages <input.pdf> --order <range syntax> -o <output.pdf>`
 
 ## Roadmap (next steps)
 
 Near-term skills:
 
 - `rotate-pages <input.pdf> --pages <range> --deg <90|180|270> -o <output.pdf>`
-- `reorder-pages <input.pdf> --order <range syntax> -o <output.pdf>`
 - `split <input.pdf> --by <single|range|chunk>`
 
 For every upcoming skill we enforce:
@@ -56,7 +56,7 @@ Summary:
 The suite includes:
 
 - CLI smoke tests
-- skill-specific tests (`merge`, `extract-pages`, `remove-pages`, `rotate-pages`, `create blank`, `set-meta`, range engine)
+- skill-specific tests (`merge`, `extract-pages`, `remove-pages`, `rotate-pages`, `create blank`, `set-meta`, `reorder-pages`, range engine)
 - public-inspired compatibility tests (pdf.js / qpdf / pdfium style)
 - golden CLI output checks
 - performance smoke test
@@ -87,4 +87,5 @@ cargo run -- remove-pages input.pdf --pages 1,3 -o out.pdf
 cargo run -- rotate-pages input.pdf --pages 2,4 --deg 90 -o out.pdf
 cargo run -- create blank --size A4 -o blank.pdf
 cargo run -- set-meta input.pdf --title \"Spec Driven\" --author \"Yutaro\" -o out.pdf
+cargo run -- reorder-pages input.pdf --order 4,2,1,3 -o out.pdf
 ```
