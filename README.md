@@ -11,6 +11,24 @@ A spec-driven Rust PDF toolkit implemented without PDF-specific crates.
 - `extract-pages <input.pdf> --pages <range> -o <output.pdf>`
 - `remove-pages <input.pdf> --pages <range> -o <output.pdf>`
 
+## Roadmap (next steps)
+
+Near-term skills:
+
+- `rotate-pages <input.pdf> --pages <range> --deg <90|180|270> -o <output.pdf>`
+- `create blank --size <A4|Letter|WxH> -o <output.pdf>`
+- `set-meta <input.pdf> --title ... --author ... -o <output.pdf>`
+- `reorder-pages <input.pdf> --order <range syntax> -o <output.pdf>`
+- `split <input.pdf> --by <single|range|chunk>`
+
+For every upcoming skill we enforce:
+
+1. Structure inspection + refactor (if needed) before coding
+2. Failing tests first (unit + CLI + compatibility manifests)
+3. Minimal implementation to pass
+4. Quality gates (`fmt`, `clippy`, `test`)
+5. Feature-branch PR, self-review, merge
+
 ## Development flow
 
 Each skill follows:
@@ -41,6 +59,12 @@ The suite includes:
 - public-inspired compatibility tests (pdf.js / qpdf / pdfium style)
 - golden CLI output checks
 - performance smoke test
+
+When adding new features, update this section with:
+
+- latest `cargo test -q` result summary
+- newly added test categories/cases
+- any new public-inspired compatibility cases
 
 ## CI
 
