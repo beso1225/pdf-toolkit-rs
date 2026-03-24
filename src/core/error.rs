@@ -24,4 +24,6 @@ pub enum PdfError {
     MetadataRequiresField,
     #[error("invalid split mode `{mode}`; expected `single`, `range:<ranges>`, or `chunk:<size>`")]
     InvalidSplitMode { mode: String },
+    #[error("merge options `--links` or `--outlines` require `--index`")]
+    MergeIndexRequiredForNavOptions,
 }

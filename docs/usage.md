@@ -12,6 +12,7 @@ cargo build
 cargo run -- info input.pdf
 cargo run -- merge a.pdf b.pdf -o merged.pdf
 cargo run -- merge a.pdf b.pdf --index -o merged-index.pdf
+cargo run -- merge a.pdf b.pdf --index --links=false --outlines=false -o merged-index-basic.pdf
 cargo run -- extract-pages input.pdf --pages 2,4-5 -o out.pdf
 cargo run -- remove-pages input.pdf --pages 1,3 -o out.pdf
 cargo run -- rotate-pages input.pdf --pages 2,4 --deg 90 -o out.pdf
@@ -28,4 +29,6 @@ cargo run -- split input.pdf --by chunk:2 --output-dir parts
   - `single`
   - `range:<ranges>` (example: `range:1-2,4-5`)
   - `chunk:<size>` (example: `chunk:3`)
-- `merge --index` prepends a plain index page, stores index entries, destination entries, link-annotation entries, and outline-entry markers for section start pages.
+- `merge --index` enables index/destination markers. Optional flags:
+  - `--links=<true|false>` (default `true` when `--index` is enabled)
+  - `--outlines=<true|false>` (default `true` when `--index` is enabled)

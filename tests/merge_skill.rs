@@ -135,3 +135,34 @@ fn merge_with_index_prepends_index_page_and_entries() {
     assert!(merged.contains("/OutlineEntry (outline-1|dest-1|chapter-a.pdf)"));
     assert!(merged.contains("/OutlineEntry (outline-2|dest-2|chapter-b.pdf)"));
 }
+
+#[test]
+fn merge_with_index_links_outlines_flags_controls_outputs() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let a = dir.path().join("a.pdf");
+    let b = dir.path().join("b.pdf");
+    write_pdf_pages(&a, 1);
+    write_pdf_pages(&b, 1);
+
+    let output = dir.path().join("merged-index-basic.pdf");
+    assert_cmd::Command::cargo_bin("pdf")
+        .expect("bin")
+        .args([
+            "merge",
+            a.to_string_lossy().as_ref(),
+            b.to_string_lossy().as_ref(),
+            "--index",
+            "--links=false",
+            "--outlines=false",
+            "-o",
+            output.to_string_lossy().as_ref(),
+        ])
+        .assert()
+        .success();
+
+    let merged = std::fs::read_to_string(&output).expect("merged output should exist");
+    assert!(merged.contains("/IndexEntry (a.pdf|2)"));
+    assert!(merged.contains("/DestEntry (dest-1|2|a.pdf)"));
+    assert!(!merged.contains("/LinkAnnot (index-1|dest-1|a.pdf)"));
+    assert!(!merged.contains("/OutlineEntry (outline-1|dest-1|a.pdf)"));
+}
