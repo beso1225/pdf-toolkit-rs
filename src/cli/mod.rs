@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::core::{inspect_pdf, merge_pdfs};
+use crate::core::{extract_pages, inspect_pdf, merge_pdfs};
 
 #[derive(Debug, Parser)]
 #[command(name = "pdf-toolkit")]
@@ -17,6 +17,14 @@ pub enum Commands {
     /// Merge PDF files in order
     Merge {
         inputs: Vec<String>,
+        #[arg(short, long)]
+        output: String,
+    },
+    /// Extract a page subset into a new PDF
+    ExtractPages {
+        input: String,
+        #[arg(long)]
+        pages: String,
         #[arg(short, long)]
         output: String,
     },
@@ -37,6 +45,19 @@ pub fn run() -> anyhow::Result<()> {
             let refs: Vec<&std::path::Path> = inputs.iter().map(std::path::Path::new).collect();
             merge_pdfs(&refs, std::path::Path::new(&output))?;
             println!("merged_pages_source_count={}", refs.len());
+            println!("output={}", output);
+        }
+        Some(Commands::ExtractPages {
+            input,
+            pages,
+            output,
+        }) => {
+            extract_pages(
+                std::path::Path::new(&input),
+                &pages,
+                std::path::Path::new(&output),
+            )?;
+            println!("extracted_pages={}", pages);
             println!("output={}", output);
         }
         None => {}

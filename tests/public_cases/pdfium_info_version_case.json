@@ -1,0 +1,11 @@
+{
+  "source": "inspired-by: pdfium parser metadata inspection tests",
+  "case_id": "pdfium-info-version-001",
+  "description": "Info command should expose PDF version and page count for valid simple files",
+  "input_pages": 2,
+  "input_version": "1.5",
+  "expect": {
+    "version": "1.5",
+    "pages": 2
+  }
+}
