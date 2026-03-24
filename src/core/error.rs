@@ -22,4 +22,6 @@ pub enum PdfError {
     InvalidBlankSize { size: String },
     #[error("set-meta requires at least one metadata field (title or author)")]
     MetadataRequiresField,
+    #[error("invalid split mode `{mode}`; expected `single`, `range:<ranges>`, or `chunk:<size>`")]
+    InvalidSplitMode { mode: String },
 }
