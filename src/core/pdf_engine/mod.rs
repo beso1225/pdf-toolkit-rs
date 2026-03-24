@@ -1,4 +1,5 @@
 mod inspect;
+mod links;
 mod merge;
 mod ops;
 mod split;
