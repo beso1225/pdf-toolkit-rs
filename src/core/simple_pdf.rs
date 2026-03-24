@@ -15,6 +15,33 @@ pub fn merge_pdfs(inputs: &[&Path], output: &Path) -> Result<(), PdfError> {
 }
 
 pub fn merge_pdfs_with_index(inputs: &[&Path], output: &Path, index: bool) -> Result<(), PdfError> {
+    let plan = collect_merge_plan(inputs, index)?;
+    let out = write_pdf_with_page_rotations(
+        plan.page_total,
+        &plan.output_version,
+        &plan.merged_rotations,
+    );
+    let out = if plan.include_index {
+        write_pdf_with_index_entries(out, &plan.index_entries)
+    } else {
+        out
+    };
+    fs::write(output, out).map_err(|source| PdfError::SavePdf {
+        path: output.display().to_string(),
+        source,
+    })?;
+    Ok(())
+}
+
+struct MergePlan {
+    page_total: usize,
+    output_version: String,
+    merged_rotations: Vec<Option<i32>>,
+    index_entries: Vec<(String, usize)>,
+    include_index: bool,
+}
+
+fn collect_merge_plan(inputs: &[&Path], include_index: bool) -> Result<MergePlan, PdfError> {
     if inputs.len() < 2 {
         return Err(PdfError::MergeRequiresMultipleInputs);
     }
@@ -23,15 +50,11 @@ pub fn merge_pdfs_with_index(inputs: &[&Path], output: &Path, index: bool) -> Re
     let mut merged_rotations: Vec<Option<i32>> = Vec::new();
     let mut output_version = String::from("1.5");
     let mut index_entries: Vec<(String, usize)> = Vec::new();
-    let mut running_start = if index { 2usize } else { 1usize };
+    let mut running_start = if include_index { 2usize } else { 1usize };
     for input in inputs {
         let info = inspect_pdf(input)?;
-        if index {
-            let name = input
-                .file_name()
-                .map(|n| n.to_string_lossy().to_string())
-                .unwrap_or_else(|| input.display().to_string());
-            index_entries.push((name, running_start));
+        if include_index {
+            index_entries.push((input_display_name(input), running_start));
         }
         page_total += info.page_count;
         running_start += info.page_count;
@@ -47,22 +70,18 @@ pub fn merge_pdfs_with_index(inputs: &[&Path], output: &Path, index: bool) -> Re
         merged_rotations.extend(extract_page_rotations(&text));
     }
 
-    if index {
+    if include_index {
         page_total += 1;
         merged_rotations.insert(0, None);
     }
 
-    let out = write_pdf_with_page_rotations(page_total, &output_version, &merged_rotations);
-    let out = if index {
-        write_pdf_with_index_entries(out, &index_entries)
-    } else {
-        out
-    };
-    fs::write(output, out).map_err(|source| PdfError::SavePdf {
-        path: output.display().to_string(),
-        source,
-    })?;
-    Ok(())
+    Ok(MergePlan {
+        page_total,
+        output_version,
+        merged_rotations,
+        index_entries,
+        include_index,
+    })
 }
 
 pub fn extract_pages(input: &Path, pages: &str, output: &Path) -> Result<(), PdfError> {
@@ -450,4 +469,10 @@ fn write_pdf_with_index_entries(mut bytes: Vec<u8>, entries: &[(String, usize)])
         bytes.extend_from_slice(format!("\n/IndexEntry ({name}|{start})").as_bytes());
     }
     bytes
+}
+
+fn input_display_name(path: &Path) -> String {
+    path.file_name()
+        .map(|n| n.to_string_lossy().to_string())
+        .unwrap_or_else(|| path.display().to_string())
 }
