@@ -49,3 +49,30 @@ fn help_mentions_spec_driven_toolkit() {
         .success()
         .stdout(contains("Spec-driven PDF toolkit in Rust"));
 }
+
+#[test]
+fn merge_help_includes_examples_and_flag_note() {
+    Command::cargo_bin("pdf")
+        .expect("binary should build")
+        .args(["merge", "--help"])
+        .assert()
+        .success()
+        .stdout(contains("Examples:"))
+        .stdout(contains("pdf merge a.pdf b.pdf -o merged.pdf"))
+        .stdout(contains(
+            "Note: --links/--outlines are only effective when --index is enabled.",
+        ));
+}
+
+#[test]
+fn split_help_includes_mode_examples() {
+    Command::cargo_bin("pdf")
+        .expect("binary should build")
+        .args(["split", "--help"])
+        .assert()
+        .success()
+        .stdout(contains("Examples:"))
+        .stdout(contains("--by single"))
+        .stdout(contains("--by range:1-2,4-5"))
+        .stdout(contains("--by chunk:3"));
+}

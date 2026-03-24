@@ -23,6 +23,9 @@ pub enum Commands {
         format: OutputFormat,
     },
     /// Merge PDF files in order
+    #[command(
+        after_help = "Examples:\n  pdf merge a.pdf b.pdf -o merged.pdf\n  pdf merge a.pdf b.pdf --index -o merged-index.pdf\n  pdf merge a.pdf b.pdf --index --links=false --outlines=false -o merged-min.pdf\n\nNote: --links/--outlines are only effective when --index is enabled."
+    )]
     Merge {
         inputs: Vec<String>,
         #[arg(long, default_value_t = false)]
@@ -96,6 +99,9 @@ pub enum Commands {
         format: OutputFormat,
     },
     /// Split PDF into multiple parts
+    #[command(
+        after_help = "Examples:\n  pdf split input.pdf --by single --output-dir parts\n  pdf split input.pdf --by range:1-2,4-5 --output-dir parts\n  pdf split input.pdf --by chunk:3 --output-dir parts"
+    )]
     Split {
         input: String,
         #[arg(long)]
