@@ -128,4 +128,6 @@ fn merge_with_index_prepends_index_page_and_entries() {
     assert_eq!(page_count_in_bytes(merged.as_bytes()), 4);
     assert!(merged.contains("/IndexEntry (chapter-a.pdf|2)"));
     assert!(merged.contains("/IndexEntry (chapter-b.pdf|4)"));
+    assert!(merged.contains("/DestEntry (dest-1|2|chapter-a.pdf)"));
+    assert!(merged.contains("/DestEntry (dest-2|4|chapter-b.pdf)"));
 }

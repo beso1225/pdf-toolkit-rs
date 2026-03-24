@@ -4,7 +4,9 @@ use crate::core::PdfError;
 
 use super::{
     inspect::{extract_page_rotations, inspect_pdf},
-    write::{write_pdf_with_index_entries, write_pdf_with_page_rotations},
+    write::{
+        write_pdf_with_dest_entries, write_pdf_with_index_entries, write_pdf_with_page_rotations,
+    },
 };
 
 pub fn merge_pdfs(inputs: &[&Path], output: &Path) -> Result<(), PdfError> {
@@ -23,6 +25,11 @@ pub fn merge_pdfs_with_index(inputs: &[&Path], output: &Path, index: bool) -> Re
     } else {
         out
     };
+    let out = if plan.include_index {
+        write_pdf_with_dest_entries(out, &plan.dest_entries)
+    } else {
+        out
+    };
     fs::write(output, out).map_err(|source| PdfError::SavePdf {
         path: output.display().to_string(),
         source,
@@ -35,6 +42,7 @@ struct MergePlan {
     output_version: String,
     merged_rotations: Vec<Option<i32>>,
     index_entries: Vec<(String, usize)>,
+    dest_entries: Vec<(String, usize, String)>,
     include_index: bool,
 }
 
@@ -47,11 +55,20 @@ fn collect_merge_plan(inputs: &[&Path], include_index: bool) -> Result<MergePlan
     let mut merged_rotations: Vec<Option<i32>> = Vec::new();
     let mut output_version = String::from("1.5");
     let mut index_entries: Vec<(String, usize)> = Vec::new();
+    let mut dest_entries: Vec<(String, usize, String)> = Vec::new();
     let mut running_start = if include_index { 2usize } else { 1usize };
+    let mut destination_counter = 1usize;
     for input in inputs {
         let info = inspect_pdf(input)?;
+        let display_name = input_display_name(input);
         if include_index {
-            index_entries.push((input_display_name(input), running_start));
+            index_entries.push((display_name.clone(), running_start));
+            dest_entries.push((
+                format!("dest-{destination_counter}"),
+                running_start,
+                display_name,
+            ));
+            destination_counter += 1;
         }
         page_total += info.page_count;
         running_start += info.page_count;
@@ -77,6 +94,7 @@ fn collect_merge_plan(inputs: &[&Path], include_index: bool) -> Result<MergePlan
         output_version,
         merged_rotations,
         index_entries,
+        dest_entries,
         include_index,
     })
 }
