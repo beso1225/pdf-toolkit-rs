@@ -33,6 +33,8 @@ pub enum Commands {
         outlines: bool,
         #[arg(short, long)]
         output: String,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
     /// Extract a page subset into a new PDF
     ExtractPages {
@@ -41,6 +43,8 @@ pub enum Commands {
         pages: String,
         #[arg(short, long)]
         output: String,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
     /// Remove selected pages from a PDF
     RemovePages {
@@ -49,6 +53,8 @@ pub enum Commands {
         pages: String,
         #[arg(short, long)]
         output: String,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
     /// Rotate selected pages in a PDF
     RotatePages {
@@ -59,6 +65,8 @@ pub enum Commands {
         deg: i32,
         #[arg(short, long)]
         output: String,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
     /// PDF creation commands
     Create {
@@ -74,6 +82,8 @@ pub enum Commands {
         author: Option<String>,
         #[arg(short, long)]
         output: String,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
     /// Reorder pages according to provided order list/ranges
     ReorderPages {
@@ -82,6 +92,8 @@ pub enum Commands {
         order: String,
         #[arg(short, long)]
         output: String,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
     /// Split PDF into multiple parts
     Split {
@@ -90,6 +102,8 @@ pub enum Commands {
         by: String,
         #[arg(long = "output-dir")]
         output_dir: String,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
 }
 
@@ -101,6 +115,8 @@ pub enum CreateCommands {
         size: String,
         #[arg(short, long)]
         output: String,
+        #[arg(long, value_enum, default_value_t = OutputFormat::Text)]
+        format: OutputFormat,
     },
 }
 
@@ -144,6 +160,7 @@ pub fn run() -> anyhow::Result<()> {
             links,
             outlines,
             output,
+            format,
         }) => {
             let refs: Vec<&std::path::Path> = inputs.iter().map(std::path::Path::new).collect();
             let effective_links = if index { links } else { false };
@@ -155,46 +172,91 @@ pub fn run() -> anyhow::Result<()> {
                 effective_links,
                 effective_outlines,
             )?;
-            print_ok("merge");
-            println!("merged_pages_source_count={}", refs.len());
-            println!("index={}", index);
-            println!("links={}", effective_links);
-            println!("outlines={}", effective_outlines);
-            println!("output={}", output);
+            match format {
+                OutputFormat::Text => {
+                    print_ok("merge");
+                    println!("merged_pages_source_count={}", refs.len());
+                    println!("index={}", index);
+                    println!("links={}", effective_links);
+                    println!("outlines={}", effective_outlines);
+                    println!("output={}", output);
+                }
+                OutputFormat::Json => {
+                    let payload = json!({
+                        "status": "ok",
+                        "command": "merge",
+                        "merged_pages_source_count": refs.len(),
+                        "index": index,
+                        "links": effective_links,
+                        "outlines": effective_outlines,
+                        "output": output,
+                    });
+                    println!("{}", payload);
+                }
+            }
         }
         Some(Commands::ExtractPages {
             input,
             pages,
             output,
+            format,
         }) => {
             extract_pages(
                 std::path::Path::new(&input),
                 &pages,
                 std::path::Path::new(&output),
             )?;
-            print_ok("extract-pages");
-            println!("extracted_pages={}", pages);
-            println!("output={}", output);
+            match format {
+                OutputFormat::Text => {
+                    print_ok("extract-pages");
+                    println!("extracted_pages={}", pages);
+                    println!("output={}", output);
+                }
+                OutputFormat::Json => {
+                    let payload = json!({
+                        "status": "ok",
+                        "command": "extract-pages",
+                        "extracted_pages": pages,
+                        "output": output,
+                    });
+                    println!("{}", payload);
+                }
+            }
         }
         Some(Commands::RemovePages {
             input,
             pages,
             output,
+            format,
         }) => {
             remove_pages(
                 std::path::Path::new(&input),
                 &pages,
                 std::path::Path::new(&output),
             )?;
-            print_ok("remove-pages");
-            println!("removed_pages={}", pages);
-            println!("output={}", output);
+            match format {
+                OutputFormat::Text => {
+                    print_ok("remove-pages");
+                    println!("removed_pages={}", pages);
+                    println!("output={}", output);
+                }
+                OutputFormat::Json => {
+                    let payload = json!({
+                        "status": "ok",
+                        "command": "remove-pages",
+                        "removed_pages": pages,
+                        "output": output,
+                    });
+                    println!("{}", payload);
+                }
+            }
         }
         Some(Commands::RotatePages {
             input,
             pages,
             deg,
             output,
+            format,
         }) => {
             rotate_pages(
                 std::path::Path::new(&input),
@@ -202,18 +264,50 @@ pub fn run() -> anyhow::Result<()> {
                 deg,
                 std::path::Path::new(&output),
             )?;
-            print_ok("rotate-pages");
-            println!("rotated_pages={}", pages);
-            println!("degrees={}", deg);
-            println!("output={}", output);
+            match format {
+                OutputFormat::Text => {
+                    print_ok("rotate-pages");
+                    println!("rotated_pages={}", pages);
+                    println!("degrees={}", deg);
+                    println!("output={}", output);
+                }
+                OutputFormat::Json => {
+                    let payload = json!({
+                        "status": "ok",
+                        "command": "rotate-pages",
+                        "rotated_pages": pages,
+                        "degrees": deg,
+                        "output": output,
+                    });
+                    println!("{}", payload);
+                }
+            }
         }
         Some(Commands::Create { command }) => match command {
-            CreateCommands::Blank { size, output } => {
+            CreateCommands::Blank {
+                size,
+                output,
+                format,
+            } => {
                 create_blank(&size, std::path::Path::new(&output))?;
-                print_ok("create-blank");
-                println!("created=blank");
-                println!("size={}", size);
-                println!("output={}", output);
+                match format {
+                    OutputFormat::Text => {
+                        print_ok("create-blank");
+                        println!("created=blank");
+                        println!("size={}", size);
+                        println!("output={}", output);
+                    }
+                    OutputFormat::Json => {
+                        let payload = json!({
+                            "status": "ok",
+                            "command": "create-blank",
+                            "created": "blank",
+                            "size": size,
+                            "output": output,
+                        });
+                        println!("{}", payload);
+                    }
+                }
             }
         },
         Some(Commands::SetMeta {
@@ -221,6 +315,7 @@ pub fn run() -> anyhow::Result<()> {
             title,
             author,
             output,
+            format,
         }) => {
             set_metadata(
                 std::path::Path::new(&input),
@@ -228,38 +323,80 @@ pub fn run() -> anyhow::Result<()> {
                 author.as_deref(),
                 std::path::Path::new(&output),
             )?;
-            print_ok("set-meta");
-            println!("set_meta=true");
-            println!("output={}", output);
+            match format {
+                OutputFormat::Text => {
+                    print_ok("set-meta");
+                    println!("set_meta=true");
+                    println!("output={}", output);
+                }
+                OutputFormat::Json => {
+                    let payload = json!({
+                        "status": "ok",
+                        "command": "set-meta",
+                        "set_meta": true,
+                        "output": output,
+                    });
+                    println!("{}", payload);
+                }
+            }
         }
         Some(Commands::ReorderPages {
             input,
             order,
             output,
+            format,
         }) => {
             reorder_pages(
                 std::path::Path::new(&input),
                 &order,
                 std::path::Path::new(&output),
             )?;
-            print_ok("reorder-pages");
-            println!("reordered_pages={}", order);
-            println!("output={}", output);
+            match format {
+                OutputFormat::Text => {
+                    print_ok("reorder-pages");
+                    println!("reordered_pages={}", order);
+                    println!("output={}", output);
+                }
+                OutputFormat::Json => {
+                    let payload = json!({
+                        "status": "ok",
+                        "command": "reorder-pages",
+                        "reordered_pages": order,
+                        "output": output,
+                    });
+                    println!("{}", payload);
+                }
+            }
         }
         Some(Commands::Split {
             input,
             by,
             output_dir,
+            format,
         }) => {
             let parts = split_pdf(
                 std::path::Path::new(&input),
                 &by,
                 std::path::Path::new(&output_dir),
             )?;
-            print_ok("split");
-            println!("split_by={}", by);
-            println!("parts={}", parts);
-            println!("output_dir={}", output_dir);
+            match format {
+                OutputFormat::Text => {
+                    print_ok("split");
+                    println!("split_by={}", by);
+                    println!("parts={}", parts);
+                    println!("output_dir={}", output_dir);
+                }
+                OutputFormat::Json => {
+                    let payload = json!({
+                        "status": "ok",
+                        "command": "split",
+                        "split_by": by,
+                        "parts": parts,
+                        "output_dir": output_dir,
+                    });
+                    println!("{}", payload);
+                }
+            }
         }
         None => {}
     }
