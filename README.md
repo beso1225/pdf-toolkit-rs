@@ -10,6 +10,7 @@ A spec-driven Rust PDF toolkit implemented without PDF-specific crates.
 - `merge <inputs...> -o <output.pdf>`
 - `extract-pages <input.pdf> --pages <range> -o <output.pdf>`
 - `remove-pages <input.pdf> --pages <range> -o <output.pdf>`
+- `rotate-pages <input.pdf> --pages <range> --deg <90|180|270> -o <output.pdf>`
 
 ## Roadmap (next steps)
 
@@ -55,7 +56,7 @@ Summary:
 The suite includes:
 
 - CLI smoke tests
-- skill-specific tests (`merge`, `extract-pages`, `remove-pages`, range engine)
+- skill-specific tests (`merge`, `extract-pages`, `remove-pages`, `rotate-pages`, range engine)
 - public-inspired compatibility tests (pdf.js / qpdf / pdfium style)
 - golden CLI output checks
 - performance smoke test
@@ -83,4 +84,5 @@ cargo run -- info path/to/file.pdf
 cargo run -- merge a.pdf b.pdf -o merged.pdf
 cargo run -- extract-pages input.pdf --pages 2,4-5 -o out.pdf
 cargo run -- remove-pages input.pdf --pages 1,3 -o out.pdf
+cargo run -- rotate-pages input.pdf --pages 2,4 --deg 90 -o out.pdf
 ```
