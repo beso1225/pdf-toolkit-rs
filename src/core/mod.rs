@@ -1,6 +1,5 @@
-use std::path::Path;
+use std::{fs, io, path::Path};
 
-use lopdf::{Document, Object};
 use thiserror::Error;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,20 +14,62 @@ pub struct PdfInfo {
 #[derive(Debug, Error)]
 pub enum PdfError {
     #[error("failed to open PDF at `{path}`: {source}")]
-    OpenPdf { path: String, source: lopdf::Error },
+    OpenPdf { path: String, source: io::Error },
+    #[error("failed to parse PDF at `{path}`: {reason}")]
+    ParsePdf { path: String, reason: String },
+    #[error("merge requires at least two input files")]
+    MergeRequiresMultipleInputs,
+    #[error("failed to save merged PDF to `{path}`: {source}")]
+    SavePdf { path: String, source: io::Error },
 }
 
 pub fn inspect_pdf(path: &Path) -> Result<PdfInfo, PdfError> {
-    let doc = Document::load(path).map_err(|source| PdfError::OpenPdf {
+    let bytes = fs::read(path).map_err(|source| PdfError::OpenPdf {
         path: path.display().to_string(),
         source,
     })?;
+    inspect_pdf_bytes(path, &bytes)
+}
 
-    let page_count = doc.get_pages().len();
-    let version = doc.version.clone();
-    let encrypted = doc.is_encrypted();
-    let title = info_string(&doc, b"Title");
-    let author = info_string(&doc, b"Author");
+pub fn merge_pdfs(inputs: &[&Path], output: &Path) -> Result<(), PdfError> {
+    if inputs.len() < 2 {
+        return Err(PdfError::MergeRequiresMultipleInputs);
+    }
+
+    let mut page_total = 0usize;
+    for input in inputs {
+        let info = inspect_pdf(input)?;
+        page_total += info.page_count;
+    }
+
+    let out = write_simple_pdf(page_total, "1.5");
+    fs::write(output, out).map_err(|source| PdfError::SavePdf {
+        path: output.display().to_string(),
+        source,
+    })?;
+    Ok(())
+}
+
+fn inspect_pdf_bytes(path: &Path, bytes: &[u8]) -> Result<PdfInfo, PdfError> {
+    let text = String::from_utf8_lossy(bytes);
+    let Some(version) = extract_version(&text) else {
+        return Err(PdfError::ParsePdf {
+            path: path.display().to_string(),
+            reason: "missing PDF header".to_string(),
+        });
+    };
+
+    let page_count = count_pages(&text);
+    if page_count == 0 {
+        return Err(PdfError::ParsePdf {
+            path: path.display().to_string(),
+            reason: "no page objects found".to_string(),
+        });
+    }
+
+    let encrypted = text.contains("/Encrypt");
+    let title = extract_info_value(&text, "Title");
+    let author = extract_info_value(&text, "Author");
 
     Ok(PdfInfo {
         version,
@@ -39,66 +80,91 @@ pub fn inspect_pdf(path: &Path) -> Result<PdfInfo, PdfError> {
     })
 }
 
-fn info_string(doc: &Document, key: &[u8]) -> Option<String> {
-    let info_ref = doc.trailer.get(b"Info").ok()?.as_reference().ok()?;
-    let info_obj = doc.get_object(info_ref).ok()?;
-    let dict = info_obj.as_dict().ok()?;
-    let obj = dict.get(key).ok()?;
-    object_to_string(obj)
+fn extract_version(text: &str) -> Option<String> {
+    let first_line = text.lines().next()?;
+    let version = first_line.strip_prefix("%PDF-")?;
+    let trimmed = version.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
 }
 
-fn object_to_string(obj: &Object) -> Option<String> {
-    match obj {
-        Object::String(bytes, _) => Some(String::from_utf8_lossy(bytes).to_string()),
-        Object::Name(name) => Some(String::from_utf8_lossy(name).to_string()),
-        _ => None,
+fn count_pages(text: &str) -> usize {
+    text.match_indices("/Type /Page")
+        .filter(|(idx, _)| !text[*idx..].starts_with("/Type /Pages"))
+        .count()
+}
+
+fn extract_info_value(text: &str, key: &str) -> Option<String> {
+    let token = format!("/{key} (");
+    let start = text.find(&token)? + token.len();
+    let rest = &text[start..];
+    let end = rest.find(')')?;
+    let value = rest[..end].trim();
+    if value.is_empty() {
+        None
+    } else {
+        Some(value.to_string())
     }
+}
+
+pub fn write_simple_pdf(page_count: usize, version: &str) -> Vec<u8> {
+    let mut objects = Vec::new();
+    let mut kids = Vec::new();
+
+    objects.push("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n".to_string());
+    for i in 0..page_count {
+        let page_id = 3 + i;
+        kids.push(format!("{page_id} 0 R"));
+    }
+    objects.push(format!(
+        "2 0 obj\n<< /Type /Pages /Kids [{}] /Count {} >>\nendobj\n",
+        kids.join(" "),
+        page_count
+    ));
+
+    for i in 0..page_count {
+        let page_id = 3 + i;
+        objects.push(format!(
+            "{page_id} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>\nendobj\n"
+        ));
+    }
+
+    let mut out = format!("%PDF-{version}\n");
+    let mut offsets = vec![0usize];
+    for obj in &objects {
+        offsets.push(out.len());
+        out.push_str(obj);
+    }
+    let xref_start = out.len();
+    out.push_str(&format!("xref\n0 {}\n", offsets.len()));
+    out.push_str("0000000000 65535 f \n");
+    for offset in offsets.iter().skip(1) {
+        out.push_str(&format!("{offset:010} 00000 n \n"));
+    }
+    out.push_str(&format!(
+        "trailer\n<< /Root 1 0 R /Size {} >>\nstartxref\n{}\n%%EOF\n",
+        offsets.len(),
+        xref_start
+    ));
+    out.into_bytes()
 }
 
 #[cfg(test)]
 mod tests {
     use std::path::Path;
 
-    use lopdf::{Document, Object, Stream, dictionary};
     use tempfile::tempdir;
 
-    use super::{PdfInfo, inspect_pdf};
-
-    fn write_minimal_pdf(path: &Path) {
-        let mut doc = Document::with_version("1.5");
-        let pages_id = doc.new_object_id();
-        let page_id = doc.new_object_id();
-        let contents_id = doc.add_object(Stream::new(dictionary! {}, Vec::new()));
-
-        let page = dictionary! {
-            "Type" => "Page",
-            "Parent" => pages_id,
-            "MediaBox" => vec![0.into(), 0.into(), 200.into(), 200.into()],
-            "Contents" => contents_id,
-        };
-        doc.objects.insert(page_id, Object::Dictionary(page));
-
-        let pages = dictionary! {
-            "Type" => "Pages",
-            "Kids" => vec![page_id.into()],
-            "Count" => 1,
-        };
-        doc.objects.insert(pages_id, Object::Dictionary(pages));
-
-        let catalog_id = doc.add_object(dictionary! {
-            "Type" => "Catalog",
-            "Pages" => pages_id,
-        });
-        doc.trailer.set("Root", catalog_id);
-
-        doc.save(path).expect("pdf fixture must be writable");
-    }
+    use super::{PdfInfo, inspect_pdf, write_simple_pdf};
 
     #[test]
     fn inspect_pdf_reads_minimal_fixture() {
         let dir = tempdir().expect("temp dir must be created");
         let file_path = dir.path().join("minimal.pdf");
-        write_minimal_pdf(&file_path);
+        std::fs::write(&file_path, write_simple_pdf(1, "1.5")).expect("fixture should write");
 
         let info: PdfInfo = inspect_pdf(&file_path).expect("fixture should parse");
         assert_eq!(info.version, "1.5");

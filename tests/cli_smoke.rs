@@ -1,36 +1,9 @@
 use assert_cmd::Command;
-use lopdf::{Document, Object, Stream, dictionary};
 use predicates::str::contains;
 use tempfile::tempdir;
 
 fn write_minimal_pdf(path: &std::path::Path) {
-    let mut doc = Document::with_version("1.5");
-    let pages_id = doc.new_object_id();
-    let page_id = doc.new_object_id();
-    let contents_id = doc.add_object(Stream::new(dictionary! {}, Vec::new()));
-
-    let page = dictionary! {
-        "Type" => "Page",
-        "Parent" => pages_id,
-        "MediaBox" => vec![0.into(), 0.into(), 200.into(), 200.into()],
-        "Contents" => contents_id,
-    };
-    doc.objects.insert(page_id, Object::Dictionary(page));
-
-    let pages = dictionary! {
-        "Type" => "Pages",
-        "Kids" => vec![page_id.into()],
-        "Count" => 1,
-    };
-    doc.objects.insert(pages_id, Object::Dictionary(pages));
-
-    let catalog_id = doc.add_object(dictionary! {
-        "Type" => "Catalog",
-        "Pages" => pages_id,
-    });
-    doc.trailer.set("Root", catalog_id);
-
-    doc.save(path).expect("pdf fixture must be writable");
+    std::fs::write(path, pdf::core::write_simple_pdf(1, "1.5")).expect("pdf fixture must write");
 }
 
 #[test]

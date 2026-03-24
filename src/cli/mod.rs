@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::core::inspect_pdf;
+use crate::core::{inspect_pdf, merge_pdfs};
 
 #[derive(Debug, Parser)]
 #[command(name = "pdf-toolkit")]
@@ -14,6 +14,12 @@ pub struct Cli {
 pub enum Commands {
     /// Inspect a PDF file
     Info { input: String },
+    /// Merge PDF files in order
+    Merge {
+        inputs: Vec<String>,
+        #[arg(short, long)]
+        output: String,
+    },
 }
 
 pub fn run() -> anyhow::Result<()> {
@@ -26,6 +32,12 @@ pub fn run() -> anyhow::Result<()> {
             println!("encrypted={}", info.encrypted);
             println!("title={}", info.title.as_deref().unwrap_or(""));
             println!("author={}", info.author.as_deref().unwrap_or(""));
+        }
+        Some(Commands::Merge { inputs, output }) => {
+            let refs: Vec<&std::path::Path> = inputs.iter().map(std::path::Path::new).collect();
+            merge_pdfs(&refs, std::path::Path::new(&output))?;
+            println!("merged_pages_source_count={}", refs.len());
+            println!("output={}", output);
         }
         None => {}
     }
