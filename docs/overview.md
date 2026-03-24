@@ -22,3 +22,4 @@ The project uses a strict test-first workflow and currently focuses on determini
 - no PDF-specific external crate dependency for core behavior
 - incremental fidelity improvements via skill-based implementation
 - compatibility and regression safety through layered test suites
+- core implementation module renamed from `simple_pdf` to `pdf_engine` for clearer intent
