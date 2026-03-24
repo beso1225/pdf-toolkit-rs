@@ -10,8 +10,41 @@ fn write_minimal_pdf(path: &std::path::Path) {
 fn runs_without_args() {
     Command::cargo_bin("pdf")
         .expect("binary should build")
+        .write_stdin("quit\n")
         .assert()
-        .success();
+        .success()
+        .stdout(contains("PDF Toolkit Shell"))
+        .stdout(contains("Type `help` for shell commands"))
+        .stdout(contains("Try: info <file.pdf>"))
+        .stdout(contains("Bye!"));
+}
+
+#[test]
+fn interactive_shell_help_command_works() {
+    Command::cargo_bin("pdf")
+        .expect("binary should build")
+        .write_stdin("help\nquit\n")
+        .assert()
+        .success()
+        .stdout(contains("Shell commands:"))
+        .stdout(contains("run <pdf-command>"))
+        .stdout(contains("quit, exit"));
+}
+
+#[test]
+fn interactive_shell_dispatches_info_command() {
+    let dir = tempdir().expect("temp dir should be created");
+    let file_path = dir.path().join("minimal.pdf");
+    write_minimal_pdf(&file_path);
+
+    Command::cargo_bin("pdf")
+        .expect("binary should build")
+        .write_stdin(format!("info {}\nquit\n", file_path.to_string_lossy()))
+        .assert()
+        .success()
+        .stdout(contains("status=ok"))
+        .stdout(contains("command=info"))
+        .stdout(contains("version=1.5"));
 }
 
 #[test]

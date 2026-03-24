@@ -15,6 +15,11 @@ Phase-based CLI roadmap now continues from merge-navigation completion:
 - Phase A: error UX standardization
 - Phase B+: output contract and structured-format expansion
 
+Interactive shell roadmap:
+- foundation (shell entry/help/quit)
+- command dispatch reuse
+- UI polish + docs/tests
+
 ## Quality gates
 
 Run locally:

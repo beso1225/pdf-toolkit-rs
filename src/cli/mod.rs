@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand, ValueEnum};
 use serde_json::json;
+use std::io::{self, Write};
 
 use crate::core::{
     create_blank, extract_pages, inspect_pdf, merge_pdfs_with_options, remove_pages, reorder_pages,
@@ -134,6 +135,13 @@ pub enum OutputFormat {
 
 pub fn run() -> anyhow::Result<()> {
     let cli = Cli::parse();
+    if cli.command.is_none() {
+        return run_interactive_shell();
+    }
+    execute_command(cli)
+}
+
+fn execute_command(cli: Cli) -> anyhow::Result<()> {
     match cli.command {
         Some(Commands::Info { input, format }) => {
             let info = inspect_pdf(std::path::Path::new(&input))?;
@@ -412,4 +420,68 @@ pub fn run() -> anyhow::Result<()> {
 fn print_ok(command: &str) {
     println!("status=ok");
     println!("command={command}");
+}
+
+fn run_interactive_shell() -> anyhow::Result<()> {
+    print_shell_banner();
+    println!("Type `help` for shell commands, or `quit` to exit.");
+    println!("Try: info <file.pdf>  |  merge a.pdf b.pdf -o out.pdf");
+
+    let stdin = io::stdin();
+    let mut line = String::new();
+    loop {
+        print!("\x1b[1;36mpdf>\x1b[0m ");
+        io::stdout().flush()?;
+
+        line.clear();
+        let bytes = stdin.read_line(&mut line)?;
+        if bytes == 0 {
+            println!();
+            break;
+        }
+
+        match line.trim() {
+            "" => continue,
+            "help" => print_shell_help(),
+            "exit" | "quit" => {
+                println!("Bye!");
+                break;
+            }
+            input => {
+                if let Err(err) = dispatch_shell_command(input) {
+                    println!("error[shell_dispatch]: {err}");
+                    println!("Tip: type `help` for shell commands.");
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn dispatch_shell_command(input: &str) -> anyhow::Result<()> {
+    let Some(parts) = shlex::split(input) else {
+        anyhow::bail!("failed to parse command line");
+    };
+    if parts.is_empty() {
+        return Ok(());
+    }
+
+    let mut argv = vec!["pdf".to_string()];
+    argv.extend(parts);
+    let cli = Cli::try_parse_from(argv)?;
+    execute_command(cli)
+}
+
+fn print_shell_banner() {
+    println!("\x1b[1;35m┌──────────────────────────┐\x1b[0m");
+    println!("\x1b[1;35m│\x1b[0m  ✨ PDF Toolkit Shell ✨  \x1b[1;35m│\x1b[0m");
+    println!("\x1b[1;35m└──────────────────────────┘\x1b[0m");
+}
+
+fn print_shell_help() {
+    println!("Shell commands:");
+    println!("  help        Show this help");
+    println!("  run <pdf-command>  Execute a command explicitly");
+    println!("              (plain command input also works)");
+    println!("  quit, exit  Leave the interactive shell");
 }
