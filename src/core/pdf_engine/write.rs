@@ -129,3 +129,13 @@ pub(super) fn write_pdf_with_index_entries(
     }
     bytes
 }
+
+pub(super) fn write_pdf_with_dest_entries(
+    mut bytes: Vec<u8>,
+    entries: &[(String, usize, String)],
+) -> Vec<u8> {
+    for (name, page, label) in entries {
+        bytes.extend_from_slice(format!("\n/DestEntry ({name}|{page}|{label})").as_bytes());
+    }
+    bytes
+}

@@ -28,4 +28,4 @@ cargo run -- split input.pdf --by chunk:2 --output-dir parts
   - `single`
   - `range:<ranges>` (example: `range:1-2,4-5`)
   - `chunk:<size>` (example: `chunk:3`)
-- `merge --index` prepends a plain index page and stores index entries for merged source start pages.
+- `merge --index` prepends a plain index page, stores index entries, and stores destination entries for section start pages (foundation for link/outline features).
