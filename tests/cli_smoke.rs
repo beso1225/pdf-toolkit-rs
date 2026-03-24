@@ -15,6 +15,7 @@ fn runs_without_args() {
         .success()
         .stdout(contains("PDF Toolkit Shell"))
         .stdout(contains("Type `help` for shell commands"))
+        .stdout(contains("Try: info <file.pdf>"))
         .stdout(contains("Bye!"));
 }
 
@@ -26,6 +27,7 @@ fn interactive_shell_help_command_works() {
         .assert()
         .success()
         .stdout(contains("Shell commands:"))
+        .stdout(contains("run <pdf-command>"))
         .stdout(contains("quit, exit"));
 }
 
