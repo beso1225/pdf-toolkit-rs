@@ -56,7 +56,36 @@ pub fn remove_pages(input: &Path, pages: &str, output: &Path) -> Result<(), PdfE
     Ok(())
 }
 
+pub fn rotate_pages(
+    input: &Path,
+    pages: &str,
+    degrees: i32,
+    output: &Path,
+) -> Result<(), PdfError> {
+    if !matches!(degrees, 90 | 180 | 270) {
+        return Err(PdfError::InvalidRotationDegrees { degrees });
+    }
+
+    let info = inspect_pdf(input)?;
+    let selected = parse_page_ranges(pages, info.page_count)?;
+    let out = write_rotated_simple_pdf(info.page_count, &info.version, &selected, degrees);
+    fs::write(output, out).map_err(|source| PdfError::SavePdf {
+        path: output.display().to_string(),
+        source,
+    })?;
+    Ok(())
+}
+
 pub fn write_simple_pdf(page_count: usize, version: &str) -> Vec<u8> {
+    write_rotated_simple_pdf(page_count, version, &[], 0)
+}
+
+fn write_rotated_simple_pdf(
+    page_count: usize,
+    version: &str,
+    rotated_pages: &[usize],
+    degrees: i32,
+) -> Vec<u8> {
     let mut objects = Vec::new();
     let mut kids = Vec::new();
 
@@ -72,9 +101,15 @@ pub fn write_simple_pdf(page_count: usize, version: &str) -> Vec<u8> {
     ));
 
     for i in 0..page_count {
+        let page_num = i + 1;
         let page_id = 3 + i;
+        let rotate = if rotated_pages.contains(&page_num) {
+            format!(" /Rotate {degrees}")
+        } else {
+            String::new()
+        };
         objects.push(format!(
-            "{page_id} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>\nendobj\n"
+            "{page_id} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200]{rotate} >>\nendobj\n"
         ));
     }
 

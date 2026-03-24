@@ -16,4 +16,6 @@ pub enum PdfError {
     InvalidPageRange { input: String, reason: String },
     #[error("remove-pages would remove all pages from the document")]
     RemoveAllPagesForbidden,
+    #[error("invalid rotation degrees `{degrees}`: allowed values are 90, 180, 270")]
+    InvalidRotationDegrees { degrees: i32 },
 }
